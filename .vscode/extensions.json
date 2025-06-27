@@ -1,0 +1,39 @@
+{
+  "recommendations": [
+    // Essential
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    
+    // TypeScript & React
+    "ms-vscode.vscode-typescript-next",
+    "dsznajder.es7-react-js-snippets",
+    "burkeholland.simple-react-snippets",
+    
+    // Productivity
+    "christian-kohler.path-intellisense",
+    "formulahendry.auto-rename-tag",
+    "steoates.autoimport",
+    "wix.vscode-import-cost",
+    
+    // Git
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+    
+    // Testing
+    "orta.vscode-jest",
+    "ms-playwright.playwright",
+    
+    // Database
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+    
+    // Other utilities
+    "mikestead.dotenv",
+    "yzhang.markdown-all-in-one",
+    "streetsidesoftware.code-spell-checker",
+    "usernamehw.errorlens",
+    "gruntfuggly.todo-tree",
+    "PKief.material-icon-theme"
+  ]
+}

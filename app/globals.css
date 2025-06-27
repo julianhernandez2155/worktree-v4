@@ -1,0 +1,198 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+@layer base {
+  /* Set dark theme as default */
+  :root {
+    @apply bg-dark-bg text-white;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-dark-bg text-white min-h-screen;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-surface;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-dark-elevated rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-dark-card;
+  }
+
+  /* Selection color */
+  ::selection {
+    @apply bg-neon-green/20 text-neon-green;
+  }
+}
+
+@layer components {
+  /* Glass morphism base */
+  .glass {
+    @apply backdrop-blur-xl bg-dark-card/70 border border-dark-border;
+  }
+
+  .glass-surface {
+    @apply backdrop-blur-xl bg-dark-surface/70 border border-dark-border;
+  }
+
+  .glass-elevated {
+    @apply backdrop-blur-xl bg-dark-elevated/70 border border-dark-border;
+  }
+
+  /* Glow effects */
+  .glow-green {
+    @apply shadow-glow;
+    filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3));
+  }
+
+  .glow-blue {
+    @apply shadow-glow-blue;
+    filter: drop-shadow(0 0 20px rgba(0, 217, 255, 0.3));
+  }
+
+  .glow-purple {
+    @apply shadow-glow-purple;
+    filter: drop-shadow(0 0 20px rgba(155, 89, 255, 0.3));
+  }
+
+  /* Neon text */
+  .text-glow-green {
+    text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+  }
+
+  .text-glow-blue {
+    text-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+  }
+
+  /* Gradient borders */
+  .gradient-border {
+    @apply relative;
+    background: linear-gradient(var(--bg, #1C1C1F), var(--bg, #1C1C1F)) padding-box,
+                linear-gradient(135deg, #00FF88, #00D9FF) border-box;
+    border: 1px solid transparent;
+  }
+
+  /* Button base styles */
+  .btn {
+    @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 active:scale-95;
+  }
+
+  .btn-primary {
+    @apply bg-neon-green text-dark-bg hover:shadow-glow hover:shadow-glow-lg;
+  }
+
+  .btn-secondary {
+    @apply glass border-neon-blue/50 text-neon-blue hover:bg-neon-blue/10;
+  }
+
+  .btn-ghost {
+    @apply text-gray-400 hover:text-white hover:bg-dark-card;
+  }
+
+  /* Card styles */
+  .card {
+    @apply glass rounded-xl p-6 transition-all duration-200;
+  }
+
+  .card-hover {
+    @apply hover:shadow-dark-lg hover:bg-dark-card/90 hover:-translate-y-1;
+  }
+
+  /* Difficulty badges */
+  .badge-difficulty {
+    @apply px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-beginner {
+    @apply bg-difficulty-beginner/20 text-difficulty-beginner border border-difficulty-beginner/50;
+  }
+
+  .badge-intermediate {
+    @apply bg-difficulty-intermediate/20 text-difficulty-intermediate border border-difficulty-intermediate/50;
+  }
+
+  .badge-advanced {
+    @apply bg-difficulty-advanced/20 text-difficulty-advanced border border-difficulty-advanced/50;
+  }
+
+  .badge-expert {
+    @apply bg-difficulty-expert/20 text-difficulty-expert border border-difficulty-expert/50;
+  }
+
+  /* Match quality indicators */
+  .match-indicator {
+    @apply inline-flex items-center gap-1 text-sm font-medium;
+  }
+
+  .match-perfect {
+    @apply text-match-perfect;
+  }
+
+  .match-strong {
+    @apply text-match-strong;
+  }
+
+  .match-good {
+    @apply text-match-good;
+  }
+
+  .match-stretch {
+    @apply text-match-stretch;
+  }
+
+  .match-reach {
+    @apply text-match-reach;
+  }
+}
+
+@layer utilities {
+  /* Animations */
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow {
+    from {
+      filter: drop-shadow(0 0 10px currentColor);
+    }
+    to {
+      filter: drop-shadow(0 0 20px currentColor) drop-shadow(0 0 30px currentColor);
+    }
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-green to-neon-blue;
+  }
+
+  .gradient-text-premium {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-purple to-neon-blue;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
