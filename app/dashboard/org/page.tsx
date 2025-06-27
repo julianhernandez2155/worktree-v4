@@ -13,13 +13,20 @@ export default async function OrgRedirectPage() {
 
   const { data: memberData } = await supabase
     .from('organization_members')
-    .select('organization:organizations(slug)')
+    .select(`
+      organization:organizations (
+        slug
+      )
+    `)
     .eq('user_id', user.id)
     .limit(1)
     .single();
 
-  if (memberData?.organization?.slug) {
-    redirect(`/dashboard/org/${memberData.organization.slug}`);
+  // Handle the nested organization data properly
+  const organization = memberData?.organization as { slug: string } | undefined;
+  
+  if (organization?.slug) {
+    redirect(`/dashboard/org/${organization.slug}`);
   } else {
     // No organizations - redirect to create one
     redirect('/onboarding-v2');

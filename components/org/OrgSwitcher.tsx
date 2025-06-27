@@ -11,6 +11,7 @@ import {
   Users,
   FolderOpen,
   UserCheck,
+  CheckSquare,
   BarChart3,
   Settings,
   LogOut,
@@ -37,6 +38,7 @@ interface OrgSwitcherProps {
 
 const navigation = [
   { name: 'Dashboard', href: '', icon: Home },
+  { name: 'My Tasks', href: '/my-tasks', icon: CheckSquare },
   { name: 'Members', href: '/members', icon: Users },
   { name: 'Projects', href: '/projects', icon: FolderOpen },
   { name: 'Roles', href: '/roles', icon: UserCheck },

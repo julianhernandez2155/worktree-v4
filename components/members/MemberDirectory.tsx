@@ -9,9 +9,7 @@ import { NeonButton } from '@/components/ui/NeonButton';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { 
   Users, 
-  Plus, 
   Search,
-  Filter,
   Grid3x3,
   List,
   SlidersHorizontal,
@@ -72,7 +70,7 @@ export function MemberDirectory({ orgSlug }: MemberDirectoryProps) {
         .select(`
           role,
           joined_at,
-          user:profiles (
+          user:profiles!inner (
             id,
             full_name,
             avatar_url,
@@ -86,7 +84,23 @@ export function MemberDirectory({ orgSlug }: MemberDirectoryProps) {
 
       if (error) throw error;
 
-      setMembers((memberData || []) as Member[]);
+      // Map the data to the correct Member interface structure
+      const formattedMembers: Member[] = (memberData || []).map(item => {
+        // Handle the case where user might be null or undefined
+        const userProfile = item.user as any;
+        return {
+          id: userProfile?.id || '',
+          user: userProfile || {
+            id: '',
+            full_name: '',
+            skills: [],
+          },
+          role: item.role,
+          joined_at: item.joined_at
+        };
+      });
+      
+      setMembers(formattedMembers);
     } catch (error) {
       console.error('Error loading members:', error);
     } finally {

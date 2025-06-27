@@ -9,12 +9,9 @@ import {
   Bell, 
   Settings, 
   Search,
-  Menu,
-  X,
-  Command
+  Menu
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { NeonButton } from '@/components/ui/NeonButton';
 
 interface Organization {
   id: string;
@@ -74,10 +71,16 @@ export function OrgLayout({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      const orgs = data?.map(item => ({
-        ...item.organization,
-        role: item.role
-      })) as Organization[];
+      const orgs = data?.map(item => {
+        const org = item.organization as any;
+        return {
+          id: org?.id || '',
+          name: org?.name || '',
+          slug: org?.slug || '',
+          logo_url: org?.logo_url,
+          role: item.role
+        };
+      }) as Organization[];
 
       setOrganizations(orgs || []);
 

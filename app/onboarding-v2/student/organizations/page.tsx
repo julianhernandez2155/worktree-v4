@@ -11,7 +11,7 @@ import {
   Plus,
   Check,
   ChevronRight,
-  Skip
+  SkipForward
 } from 'lucide-react';
 
 interface Organization {
@@ -236,7 +236,7 @@ export default function StudentOrganizationsPage() {
             variant="ghost"
             onClick={handleSkip}
             disabled={loading}
-            icon={<Skip />}
+            icon={<SkipForward />}
           >
             Skip for now
           </NeonButton>

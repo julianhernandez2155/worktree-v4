@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { NeonButton } from '@/components/ui/NeonButton';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 import { 
   Users, 
   FolderOpen, 
@@ -27,6 +28,7 @@ interface OrgDashboardProps {
 interface DashboardStats {
   totalMembers: number;
   activeMembers: number;
+  totalProjects: number;
   activeProjects: number;
   completedProjects: number;
   filledRoles: number;
@@ -41,6 +43,7 @@ export function OrgDashboard({ orgSlug }: OrgDashboardProps) {
   const [stats, setStats] = useState<DashboardStats>({
     totalMembers: 0,
     activeMembers: 0,
+    totalProjects: 0,
     activeProjects: 0,
     completedProjects: 0,
     filledRoles: 0,
@@ -50,6 +53,7 @@ export function OrgDashboard({ orgSlug }: OrgDashboardProps) {
     topSkills: [],
   });
   const [loading, setLoading] = useState(true);
+  const [showCreateProject, setShowCreateProject] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -111,6 +115,7 @@ export function OrgDashboard({ orgSlug }: OrgDashboardProps) {
       setStats({
         totalMembers,
         activeMembers,
+        totalProjects: projectData?.length || 0,
         activeProjects,
         completedProjects,
         filledRoles: 5, // TODO: Implement actual role tracking
@@ -196,7 +201,10 @@ export function OrgDashboard({ orgSlug }: OrgDashboardProps) {
           <NeonButton variant="secondary" icon={<Calendar />}>
             Schedule
           </NeonButton>
-          <NeonButton icon={<Plus />}>
+          <NeonButton 
+            icon={<Plus />}
+            onClick={() => setShowCreateProject(true)}
+          >
             Create Project
           </NeonButton>
         </div>
@@ -332,6 +340,18 @@ export function OrgDashboard({ orgSlug }: OrgDashboardProps) {
             ))}
           </div>
         </GlassCard>
+      )}
+
+      {/* Create Project Modal */}
+      {showCreateProject && (
+        <CreateProjectModal
+          orgSlug={orgSlug}
+          onClose={() => setShowCreateProject(false)}
+          onProjectCreated={() => {
+            setShowCreateProject(false);
+            loadDashboardData();
+          }}
+        />
       )}
     </div>
   );

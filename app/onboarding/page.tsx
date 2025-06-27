@@ -120,7 +120,7 @@ export default function OnboardingPage() {
             .select('id')
             .single();
 
-          return newSkill?.id;
+          return newSkill ? newSkill.id : null;
         });
 
         const skillIds = await Promise.all(skillPromises);
@@ -146,7 +146,10 @@ export default function OnboardingPage() {
   };
 
   const renderStepContent = () => {
-    switch (ONBOARDING_STEPS[currentStep].id) {
+    const currentStepData = ONBOARDING_STEPS[currentStep];
+    if (!currentStepData) return null;
+    
+    switch (currentStepData.id) {
       case 'university':
         return (
           <div className="space-y-4">
