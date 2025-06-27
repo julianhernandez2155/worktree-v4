@@ -36,7 +36,8 @@
     // Path aliases for cleaner imports
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./app/*"],
+      "@/*": ["./*"],
+      "@/app/*": ["./app/*"],
       "@/components/*": ["./components/*"],
       "@/lib/*": ["./lib/*"],
       "@/hooks/*": ["./lib/hooks/*"],

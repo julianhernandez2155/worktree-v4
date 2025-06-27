@@ -10,17 +10,29 @@ const nextConfig = {
   
   // Optimize images
   images: {
-    domains: ['localhost', 'supabase.co'],
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+      {
+        protocol: 'https',
+        hostname: 'localhost',
+      },
+      {
+        protocol: 'https',
+        hostname: 'supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+      },
+    ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   
-  // Enable SWC minification for better performance
-  swcMinify: true,
-  
-  // Optimize fonts
-  optimizeFonts: true,
   
   // Configure headers for security and performance
   async headers() {
@@ -86,13 +98,8 @@ const nextConfig = {
   
   // Experimental features for better performance
   experimental: {
-    // Enable server components
-    serverActions: {
-      allowedOrigins: ['localhost:3000'],
-      bodySizeLimit: '2mb',
-    },
-    // Optimize CSS
-    optimizeCss: true,
+    // Server Actions are now stable in Next.js 15
+    // optimizeCss is enabled by default in Next.js 15
   },
   
   // Configure redirects
@@ -116,62 +123,23 @@ const nextConfig = {
     ]
   },
   
-  // Webpack configuration for optimizations
+  // Webpack configuration - simplified to avoid runtime errors
   webpack: (config, { isServer }) => {
-    // Optimize chunks
-    config.optimization = {
-      ...config.optimization,
-      moduleIds: 'deterministic',
-      runtimeChunk: isServer ? undefined : 'single',
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          default: false,
-          vendors: false,
-          framework: {
-            name: 'framework',
-            chunks: 'all',
-            test: /[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-subscription)[\\/]/,
-            priority: 40,
-            enforce: true,
-          },
-          lib: {
-            test(module) {
-              return module.size() > 160000 &&
-                /node_modules[\\/]/.test(module.identifier())
-            },
-            name(module) {
-              const hash = require('crypto').createHash('sha1')
-              hash.update(module.identifier())
-              return hash.digest('hex').substring(0, 8)
-            },
-            priority: 30,
-            minChunks: 1,
-            reuseExistingChunk: true,
-          },
-          commons: {
-            name: 'commons',
-            minChunks: 2,
-            priority: 20,
-          },
-          shared: {
-            name(module, chunks) {
-              return 'shared-' +
-                require('crypto')
-                  .createHash('sha1')
-                  .update(chunks.reduce((acc, chunk) => acc + chunk.name, ''))
-                  .digest('hex')
-                  .substring(0, 8)
-            },
-            priority: 10,
-            minChunks: 2,
-            reuseExistingChunk: true,
-          },
-        },
-      },
+    // Minimal webpack customization to avoid module loading issues
+    // Let Next.js handle most optimization defaults
+    
+    // Ensure config is defined
+    if (!config) {
+      console.error('Webpack config is undefined');
+      return {};
     }
     
-    return config
+    // Disable concatenateModules to avoid module loading issues
+    if (config.optimization) {
+      config.optimization.concatenateModules = false;
+    }
+    
+    return config;
   },
 }
 

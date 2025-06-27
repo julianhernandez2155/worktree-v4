@@ -4,7 +4,8 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { NeonButton } from '@/components/ui/NeonButton';
 import { DifficultyBadge, DifficultyIndicator } from '@/components/ui/DifficultyBadge';
 import { MatchQualityIndicator, MatchScoreDisplay } from '@/components/ui/MatchQualityIndicator';
-import { ArrowRight, Sparkles, Code, Users } from 'lucide-react';
+import { ArrowRight, Sparkles, Code, Users, LogIn } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -16,6 +17,20 @@ export default function Home() {
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-20">
+        {/* Auth buttons in header */}
+        <div className="absolute top-8 right-8 flex gap-4">
+          <Link href="/login">
+            <NeonButton variant="ghost" size="sm" icon={<LogIn />}>
+              Sign in
+            </NeonButton>
+          </Link>
+          <Link href="/signup">
+            <NeonButton size="sm">
+              Get Started
+            </NeonButton>
+          </Link>
+        </div>
+
         {/* Hero Section */}
         <div className="text-center mb-20">
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
@@ -25,9 +40,11 @@ export default function Home() {
             Bridge campus involvement with career readiness. Find opportunities that match your skills and grow your professional network.
           </p>
           <div className="flex gap-4 justify-center">
-            <NeonButton size="lg" icon={<Sparkles />}>
-              Get Started
-            </NeonButton>
+            <Link href="/signup">
+              <NeonButton size="lg" icon={<Sparkles />}>
+                Get Started
+              </NeonButton>
+            </Link>
             <NeonButton variant="secondary" size="lg" icon={<ArrowRight />} iconPosition="right">
               Learn More
             </NeonButton>

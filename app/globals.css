@@ -2,13 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import Inter font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+/* Inter font loaded via next/font in layout.tsx */
 
 @layer base {
   /* Set dark theme as default */
   :root {
     @apply bg-dark-bg text-white;
+    
+    /* shadcn/ui CSS variables for dark mode */
+    --background: 220 20% 6%;
+    --foreground: 0 0% 95%;
+    --card: 220 20% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 220 20% 8%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 142 100% 50%;
+    --primary-foreground: 220 20% 6%;
+    --secondary: 220 20% 15%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 220 20% 20%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 220 20% 15%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 62% 60%;
+    --destructive-foreground: 0 0% 95%;
+    --border: 220 20% 15%;
+    --input: 220 20% 15%;
+    --ring: 142 100% 50%;
+    --radius: 0.5rem;
   }
 
   html {
@@ -160,6 +181,14 @@
   .match-reach {
     @apply text-match-reach;
   }
+
+  /* Form input styles */
+  .input-field {
+    @apply w-full px-4 py-3 bg-dark-surface border border-dark-border rounded-lg
+    text-white placeholder-gray-500
+    focus:outline-none focus:border-neon-green/50 focus:ring-1 focus:ring-neon-green/20
+    transition-colors duration-200;
+  }
 }
 
 @layer utilities {
@@ -194,5 +223,26 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  /* Slide up animation */
+  @keyframes slide-up {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+
+  /* Loading states */
+  .loading-spinner {
+    @apply animate-spin rounded-full h-5 w-5 border-2 border-gray-300 border-t-white;
   }
 }
