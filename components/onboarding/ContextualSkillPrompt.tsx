@@ -238,7 +238,9 @@ export function ContextualSkillPrompt({
                       value={skill.level}
                       onChange={(e) => {
                         const updated = [...selectedSkills];
-                        updated[index].level = e.target.value as any;
+                        if (updated[index]) {
+                          updated[index].level = e.target.value as any;
+                        }
                         setSelectedSkills(updated);
                       }}
                     >

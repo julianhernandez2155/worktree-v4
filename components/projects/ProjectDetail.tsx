@@ -378,7 +378,7 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
         ) : (
           <div className="divide-y divide-dark-border">
             {tasks.map((task) => {
-            const dueDateStatus = getDueDateStatus(task.due_date);
+            const dueDateStatus = getDueDateStatus(task.due_date || null);
             
             return (
               <div 
@@ -481,7 +481,7 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
                         </div>
                         <span className="text-sm text-white">
                           {task.assignees.length === 1 
-                            ? task.assignees[0].full_name 
+                            ? task.assignees[0]?.full_name || 'Assigned'
                             : `${task.assignees.length} assigned`}
                         </span>
                         <button

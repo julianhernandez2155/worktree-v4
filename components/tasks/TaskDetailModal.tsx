@@ -23,6 +23,7 @@ import {
   Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TaskSkillRequirements } from '@/components/tasks/TaskSkillRequirements';
 
 interface Subtask {
   id: string;
@@ -480,21 +481,12 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
           </div>
 
           {/* Skills Required */}
-          {task.skills_used.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-white mb-3">Skills Required</h3>
-              <div className="flex flex-wrap gap-2">
-                {task.skills_used.map((skill) => (
-                  <span 
-                    key={skill}
-                    className="px-3 py-1 bg-dark-card text-sm text-dark-muted rounded-full border border-dark-border"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="mb-6">
+            <TaskSkillRequirements
+              taskId={task.id}
+              isEditing={false}
+            />
+          </div>
 
           {/* Subtasks */}
           <div className="mb-6">

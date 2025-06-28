@@ -102,9 +102,10 @@ export function CreateProjectModal({ orgSlug, onClose, onProjectCreated }: Creat
 
       const matches: Record<string, number> = {};
       uniqueSkills.forEach(skill => {
-        matches[skill] = members?.filter(m => 
-          m.user?.skills?.includes(skill)
-        ).length || 0;
+        matches[skill] = members?.filter(m => {
+          const userSkills = m.user as { skills?: string[] } | null;
+          return userSkills?.skills?.includes(skill);
+        }).length || 0;
       });
 
       setSkillMatches(matches);
@@ -289,7 +290,7 @@ export function CreateProjectModal({ orgSlug, onClose, onProjectCreated }: Creat
                           key={skill} 
                           className={cn(
                             "px-2 py-1 text-xs rounded-full",
-                            skillMatches[skill] > 0
+                            (skillMatches[skill] || 0) > 0
                               ? "bg-green-500/20 text-green-400"
                               : "bg-red-500/20 text-red-400"
                           )}

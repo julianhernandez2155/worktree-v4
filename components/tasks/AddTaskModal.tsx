@@ -10,10 +10,10 @@ import {
   Calendar,
   Flag,
   Clock,
-  Tag,
   Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TaskSkillRequirements } from '@/components/tasks/TaskSkillRequirements';
 
 interface AddTaskModalProps {
   projectId: string;
@@ -25,8 +25,7 @@ interface AddTaskModalProps {
 export function AddTaskModal({ projectId, orgSlug, onClose, onTaskAdded }: AddTaskModalProps) {
   const [taskName, setTaskName] = useState('');
   const [description, setDescription] = useState('');
-  const [skills, setSkills] = useState<string[]>([]);
-  const [skillInput, setSkillInput] = useState('');
+  const [requiredSkills, setRequiredSkills] = useState<{ skillId: string; importance: 'required' | 'preferred' }[]>([]);
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
   const [dueDate, setDueDate] = useState('');
   const [estimatedHours, setEstimatedHours] = useState('');
@@ -40,21 +39,40 @@ export function AddTaskModal({ projectId, orgSlug, onClose, onTaskAdded }: AddTa
     try {
       setCreating(true);
 
-      const { error } = await supabase
+      const { data: task, error } = await supabase
         .from('contributions')
         .insert({
           project_id: projectId,
           task_name: taskName,
           task_description: description,
-          skills_used: skills,
+          skills_used: [], // Will be migrated to task_required_skills
           priority,
           due_date: dueDate || null,
           estimated_hours: estimatedHours ? parseFloat(estimatedHours) : null,
-          contribution_type: 'internal',
+          contribution_type: 'task',
           status: 'pending'
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Add required skills if any
+      if (task && requiredSkills.length > 0) {
+        const { error: skillError } = await supabase
+          .from('task_required_skills')
+          .insert(
+            requiredSkills.map(rs => ({
+              task_id: task.id,
+              skill_id: rs.skillId,
+              importance: rs.importance
+            }))
+          );
+          
+        if (skillError) {
+          console.error('Error adding required skills:', skillError);
+        }
+      }
 
       onTaskAdded?.();
       onClose();
@@ -63,17 +81,6 @@ export function AddTaskModal({ projectId, orgSlug, onClose, onTaskAdded }: AddTa
     } finally {
       setCreating(false);
     }
-  };
-
-  const addSkill = () => {
-    if (skillInput.trim() && !skills.includes(skillInput.trim())) {
-      setSkills([...skills, skillInput.trim()]);
-      setSkillInput('');
-    }
-  };
-
-  const removeSkill = (skill: string) => {
-    setSkills(skills.filter(s => s !== skill));
   };
 
   const getPriorityColor = (p: string) => {
@@ -137,51 +144,10 @@ export function AddTaskModal({ projectId, orgSlug, onClose, onTaskAdded }: AddTa
           </div>
 
           {/* Skills Required */}
-          <div>
-            <label className="block text-sm font-medium text-dark-muted mb-2">
-              Required Skills
-            </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={skillInput}
-                onChange={(e) => setSkillInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-                placeholder="Type a skill and press Enter"
-                className="flex-1 px-3 py-2 bg-dark-card border border-dark-border rounded-lg 
-                         text-white placeholder-dark-muted focus:border-neon-green focus:outline-none"
-              />
-              <NeonButton
-                onClick={addSkill}
-                size="sm"
-                variant="secondary"
-                icon={<Plus className="h-4 w-4" />}
-              >
-                Add
-              </NeonButton>
-            </div>
-            
-            {skills.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {skills.map((skill) => (
-                  <span 
-                    key={skill} 
-                    className="px-3 py-1 bg-dark-card text-sm text-white rounded-full 
-                             flex items-center gap-2 border border-dark-border"
-                  >
-                    <Tag className="h-3 w-3 text-neon-green" />
-                    {skill}
-                    <button
-                      onClick={() => removeSkill(skill)}
-                      className="hover:text-red-400 transition-colors"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+          <TaskSkillRequirements
+            onChange={setRequiredSkills}
+            isEditing={true}
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Priority */}
