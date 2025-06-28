@@ -8,6 +8,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
 import { AssignTaskModal } from '@/components/tasks/AssignTaskModal';
 import { AddTaskModal } from '@/components/tasks/AddTaskModal';
+import { NaturalLanguageTaskInput } from '@/components/tasks/NaturalLanguageTaskInput';
 import { 
   ArrowLeft,
   Clock, 
@@ -23,7 +24,8 @@ import {
   Lock,
   ChevronRight,
   ListChecks,
-  UserPlus
+  UserPlus,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -77,6 +79,8 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
   const [assigningTask, setAssigningTask] = useState<string | null>(null);
   const [showAddTask, setShowAddTask] = useState(false);
+  const [showNLInput, setShowNLInput] = useState(false);
+  const [memberNames, setMemberNames] = useState<string[]>([]);
   const router = useRouter();
   const supabase = createClient();
 
@@ -157,6 +161,25 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
       })) || [];
 
       setTasks(tasksWithAssignees);
+
+      // Load organization members for NL input
+      if (projectData?.organization_id) {
+        const { data: membersData } = await supabase
+          .from('organization_members')
+          .select(`
+            user:profiles!user_id(
+              full_name
+            )
+          `)
+          .eq('organization_id', projectData.organization_id);
+
+        if (membersData) {
+          const names = membersData
+            .map(m => m.user?.full_name)
+            .filter(Boolean) as string[];
+          setMemberNames(names);
+        }
+      }
     } catch (error) {
       console.error('Error loading project details:', error);
     } finally {
@@ -302,14 +325,39 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
         <div className="p-6 border-b border-dark-border">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-white">Tasks</h2>
-            <NeonButton 
-              size="sm" 
-              icon={<Plus className="h-4 w-4" />}
-              onClick={() => setShowAddTask(true)}
-            >
-              Add Task
-            </NeonButton>
+            <div className="flex items-center gap-2">
+              <NeonButton 
+                size="sm" 
+                variant="secondary"
+                icon={<Sparkles className="h-4 w-4" />}
+                onClick={() => setShowNLInput(!showNLInput)}
+              >
+                AI Create
+              </NeonButton>
+              <NeonButton 
+                size="sm" 
+                icon={<Plus className="h-4 w-4" />}
+                onClick={() => setShowAddTask(true)}
+              >
+                Add Task
+              </NeonButton>
+            </div>
           </div>
+          
+          {/* Natural Language Input */}
+          {showNLInput && (
+            <div className="mt-4">
+              <NaturalLanguageTaskInput
+                projectId={projectId}
+                orgSlug={orgSlug}
+                memberNames={memberNames}
+                onTaskCreated={() => {
+                  loadProjectDetails();
+                  setShowNLInput(false);
+                }}
+              />
+            </div>
+          )}
         </div>
 
         {tasks.length === 0 ? (

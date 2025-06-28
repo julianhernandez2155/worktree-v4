@@ -1,69 +1,4 @@
 {
-  // Editor Performance
-  "editor.fontSize": 14,
-  "editor.lineHeight": 22,
-  "editor.tabSize": 2,
-  "editor.insertSpaces": true,
-  "editor.detectIndentation": false,
-  "editor.renderWhitespace": "boundary",
-  "editor.rulers": [80, 120],
-  "editor.wordWrap": "on",
-  "editor.minimap.enabled": false,
-  "editor.suggestSelection": "first",
-  "editor.acceptSuggestionOnCommitCharacter": false,
-  "editor.quickSuggestions": {
-    "strings": true
-  },
-  
-  // Performance optimizations
-  "editor.largeFileOptimizations": true,
-  "editor.maxTokenizationLineLength": 2000,
-  "files.watcherExclude": {
-    "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true,
-    "**/node_modules/**": true,
-    "**/.next/**": true,
-    "**/build/**": true,
-    "**/dist/**": true,
-    "**/coverage/**": true,
-    "**/.turbo/**": true
-  },
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/.next": true,
-    "**/build": true,
-    "**/dist": true,
-    "**/coverage": true,
-    "**/.turbo": true,
-    "**/*.tsbuildinfo": true
-  },
-  
-  // TypeScript
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
-  "typescript.preferences.includePackageJsonAutoImports": "auto",
-  "typescript.preferences.importModuleSpecifier": "relative",
-  "typescript.updateImportsOnFileMove.enabled": "always",
-  "typescript.suggest.autoImports": true,
-  "typescript.implementationsCodeLens.enabled": true,
-  "typescript.referencesCodeLens.enabled": true,
-  "typescript.tsserver.maxTsServerMemory": 4096,
-  
-  // Formatting
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.formatOnSave": true,
-  "editor.formatOnPaste": false,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
-    "source.organizeImports": "never",
-    "source.sortImports": "explicit"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -76,64 +11,135 @@
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  
-  // ESLint
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "breadcrumbs.enabled": true,
+  "deno.enablePaths": [
+    "supabase/functions"
+  ],
+  "deno.lint": true,
+  "deno.unstable": [
+    "bare-node-builtins",
+    "byonm",
+    "sloppy-imports",
+    "unsafe-proto",
+    "webgpu",
+    "broadcast-channel",
+    "worker-options",
+    "cron",
+    "kv",
+    "ffi",
+    "fs",
+    "http",
+    "net"
+  ],
+  "editor.acceptSuggestionOnCommitCharacter": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never",
+    "source.sortImports": "explicit"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.detectIndentation": false,
+  "editor.fontSize": 14,
+  "editor.formatOnPaste": false,
+  "editor.formatOnSave": true,
+  "editor.insertSpaces": true,
+  "editor.largeFileOptimizations": true,
+  "editor.lineHeight": 22,
+  "editor.maxTokenizationLineLength": 2000,
+  "editor.minimap.enabled": false,
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  "editor.renderWhitespace": "boundary",
+  "editor.rulers": [
+    80,
+    120
+  ],
+  "editor.suggestSelection": "first",
+  "editor.tabSize": 2,
+  "editor.wordWrap": "on",
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact",
+    "typescript": "typescriptreact"
+  },
+  "eslint.codeActionsOnSave.mode": "problems",
   "eslint.enable": true,
+  "eslint.lintTask.enable": true,
   "eslint.packageManager": "npm",
+  "eslint.run": "onType",
   "eslint.validate": [
     "javascript",
     "javascriptreact",
     "typescript",
     "typescriptreact"
   ],
-  "eslint.codeActionsOnSave.mode": "problems",
-  "eslint.lintTask.enable": true,
-  "eslint.run": "onType",
-  
-  // Git
-  "git.autofetch": true,
-  "git.confirmSync": false,
-  "git.enableSmartCommit": true,
-  "merge-conflict.autoNavigateNextConflict.enabled": true,
-  
-  // Terminal
-  "terminal.integrated.defaultProfile.osx": "zsh",
-  "terminal.integrated.fontSize": 14,
-  
-  // File associations
+  "explorer.compactFolders": false,
+  "extensions.ignoreRecommendations": false,
   "files.associations": {
     "*.css": "tailwindcss",
     ".env*": "properties"
   },
-  
-  // Tailwind CSS
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/.next/**": true,
+    "**/.turbo/**": true,
+    "**/build/**": true,
+    "**/coverage/**": true,
+    "**/dist/**": true,
+    "**/node_modules/**": true
+  },
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "javascript.preferences.importModuleSpecifier": "relative",
+  "merge-conflict.autoNavigateNextConflict.enabled": true,
+  "search.exclude": {
+    "**/*.tsbuildinfo": true,
+    "**/.next": true,
+    "**/.turbo": true,
+    "**/build": true,
+    "**/coverage": true,
+    "**/dist": true,
+    "**/node_modules": true
+  },
   "tailwindCSS.experimental.classRegex": [
-    ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
-    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
-    ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+    [
+      "clsx\\(([^)]*)\\)",
+      "(?:'|\"|`)([^']*)(?:'|\"|`)"
+    ],
+    [
+      "cva\\(([^)]*)\\)",
+      "[\"'`]([^\"'`]*).*?[\"'`]"
+    ],
+    [
+      "cn\\(([^)]*)\\)",
+      "(?:'|\"|`)([^']*)(?:'|\"|`)"
+    ]
   ],
   "tailwindCSS.includeLanguages": {
     "typescript": "javascript",
     "typescriptreact": "javascript"
   },
-  
-  // Extensions
-  "extensions.ignoreRecommendations": false,
-  
-  // Emmet
-  "emmet.includeLanguages": {
-    "javascript": "javascriptreact",
-    "typescript": "typescriptreact"
-  },
-  
-  // Auto imports
-  "javascript.preferences.importModuleSpecifier": "relative",
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.fontSize": 14,
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.implementationsCodeLens.enabled": true,
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.preferences.includePackageJsonAutoImports": "auto",
   "typescript.preferences.preferTypeOnlyAutoImports": true,
-  
-  // Other
+  "typescript.referencesCodeLens.enabled": true,
+  "typescript.suggest.autoImports": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.tsserver.maxTsServerMemory": 4096,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "window.zoomLevel": 0,
   "workbench.editor.labelFormat": "short",
-  "explorer.compactFolders": false,
-  "breadcrumbs.enabled": true,
-  "workbench.iconTheme": "material-icon-theme",
-  "window.zoomLevel": 0
+  "workbench.iconTheme": "material-icon-theme"
 }
