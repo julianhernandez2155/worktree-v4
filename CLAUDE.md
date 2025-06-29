@@ -211,13 +211,26 @@ npm run db:types
 ### Organization Profile Page
 - **Route**: `/dashboard/org/[slug]/profile`
 - **Features**:
-  - Header with logo, name, verification badge, member/project counts
-  - Three tabs: About (mission/values), Projects (open positions), Contact
+  - Header with logo, name, verification badge, and 5 stat cards
+  - Stats are clickable: Members links to member page, others switch tabs
+  - Changed "Open Positions" to "Get Involved" (more appropriate for student orgs)
+  - Added "Skills Developed" stat showing unique skills count
+  - Three tabs: About (mission/values), Projects (opportunities), Contact
   - Admin edit button (visible to org admins only)
   - Ready for future public viewing at `/org/[slug]`
+- **About Tab Layout**: 
+  - 2-column grid on desktop for better space utilization
+  - Left column: Mission, What We Do, Skills You'll Gain
+  - Right column: Leadership Team, Recent Activity
+  - Full width: Values section
+- **Real Data Integration**:
+  - Leadership Team: Shows actual org leaders with profile links
+  - Skills You'll Gain: Aggregated from all project skills
+  - Recent Activity: Shows completed tasks or fallback messages
 - **Integration**: Org names on project cards link to profiles
 
 ### Database Considerations
 - Public projects use `internal_projects` table with `is_public=true`
 - Organization profiles pull from existing `organizations` table
+- Leadership roles: president, vice_president, treasurer, secretary, admin
 - Consider adding fields: mission, values, social_links, founded_date
