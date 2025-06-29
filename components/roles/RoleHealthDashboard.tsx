@@ -1,12 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { RoleCard } from './RoleCard';
-import { SuccessionTimeline } from './SuccessionTimeline';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { motion } from 'framer-motion';
 import { 
   UserPlus,
   AlertTriangle,
@@ -16,7 +10,15 @@ import {
   Target,
   Sparkles
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
+
+import { RoleCard } from './RoleCard';
+import { SuccessionTimeline } from './SuccessionTimeline';
 
 interface Role {
   id: string;
@@ -72,7 +74,7 @@ export function RoleHealthDashboard({ orgSlug }: RoleHealthDashboardProps) {
         .eq('slug', orgSlug)
         .single();
 
-      if (!orgData) throw new Error('Organization not found');
+      if (!orgData) {throw new Error('Organization not found');}
       setOrganization(orgData);
 
       // Get roles with current holders
@@ -91,7 +93,7 @@ export function RoleHealthDashboard({ orgSlug }: RoleHealthDashboardProps) {
         .eq('organization_id', orgData.id)
         .order('title');
 
-      if (rolesError) throw rolesError;
+      if (rolesError) {throw rolesError;}
       setRoles(rolesData || []);
 
       // Get all members for succession planning
@@ -117,21 +119,21 @@ export function RoleHealthDashboard({ orgSlug }: RoleHealthDashboardProps) {
   };
 
   const getRoleStatus = (role: Role): 'stable' | 'at-risk' | 'vacant' => {
-    if (!role.current_holder_id) return 'vacant';
+    if (!role.current_holder_id) {return 'vacant';}
     
     if (role.term_end_date) {
       const endDate = new Date(role.term_end_date);
       const today = new Date();
       const monthsUntilEnd = (endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24 * 30);
       
-      if (monthsUntilEnd < 3) return 'at-risk';
+      if (monthsUntilEnd < 3) {return 'at-risk';}
     }
     
     return 'stable';
   };
 
   const getSuccessionCandidates = (role: Role): Candidate[] => {
-    if (!role.required_skills || role.required_skills.length === 0) return [];
+    if (!role.required_skills || role.required_skills.length === 0) {return [];}
 
     return members
       .filter(m => m.user.id !== role.current_holder_id) // Exclude current holder

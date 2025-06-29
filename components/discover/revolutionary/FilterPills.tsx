@@ -8,11 +8,13 @@ import {
   Globe,
   Zap
 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 
 interface FilterPillsProps {
   selectedFilter: string;
   onFilterChange: (filter: string) => void;
+  showPerfectMatch?: boolean;
 }
 
 const filters = [
@@ -23,46 +25,33 @@ const filters = [
   { id: 'remote', label: 'Remote', icon: Globe },
 ];
 
-export function FilterPills({ selectedFilter, onFilterChange }: FilterPillsProps) {
+export function FilterPills({ selectedFilter, onFilterChange, showPerfectMatch = true }: FilterPillsProps) {
+  const displayFilters = showPerfectMatch 
+    ? filters 
+    : filters.filter(f => f.id !== 'perfect-match');
+    
   return (
-    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-      {filters.map((filter) => {
+    <div className="flex gap-2 overflow-x-auto no-scrollbar">
+      {displayFilters.map((filter) => {
         const Icon = filter.icon;
         const isSelected = selectedFilter === filter.id;
         
         return (
-          <motion.button
+          <button
             key={filter.id}
             onClick={() => onFilterChange(filter.id)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
             className={cn(
-              "px-4 py-2 rounded-full text-sm font-medium",
-              "border transition-all duration-200",
+              "px-3 py-1.5 rounded-lg text-sm font-medium",
+              "transition-all duration-200",
               "flex items-center gap-2 whitespace-nowrap",
               isSelected
-                ? "bg-neon-green text-dark-bg border-neon-green"
-                : "bg-dark-card text-white border-dark-border hover:border-neon-green/50"
+                ? "bg-dark-card text-white"
+                : "text-gray-400 hover:text-white hover:bg-dark-card/50"
             )}
           >
-            <motion.div
-              animate={isSelected ? { rotate: 360 } : { rotate: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Icon className="h-4 w-4" />
-            </motion.div>
+            <Icon className="h-4 w-4" />
             <span>{filter.label}</span>
-            
-            {/* Animated indicator */}
-            {isSelected && (
-              <motion.div
-                layoutId="activeFilter"
-                className="absolute inset-0 bg-neon-green rounded-full -z-10"
-                initial={false}
-                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-              />
-            )}
-          </motion.button>
+          </button>
         );
       })}
     </div>

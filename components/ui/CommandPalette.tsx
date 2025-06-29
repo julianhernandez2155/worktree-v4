@@ -1,18 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import {
-  Command,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-} from '@/components/ui/command';
 import {
   Search,
   Users,
@@ -25,6 +12,20 @@ import {
   ArrowRight,
   Sparkles
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from '@/components/ui/command';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
 interface CommandPaletteProps {
@@ -49,7 +50,7 @@ export function CommandPalette({ open, onOpenChange, currentOrg }: CommandPalett
   }, [open, currentOrg]);
 
   const loadSearchData = async () => {
-    if (!currentOrg) return;
+    if (!currentOrg) {return;}
     
     setLoading(true);
     try {

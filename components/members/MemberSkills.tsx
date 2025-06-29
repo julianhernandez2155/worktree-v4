@@ -1,12 +1,13 @@
 'use client';
 
+import { CheckCircle, Plus, Award, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { MemberSkill, Skill } from '@/types/skills';
+
 import { SkillSelector } from '@/components/skills/SkillSelector';
 import { NeonButton } from '@/components/ui/NeonButton';
-import { CheckCircle, Plus, Award, Loader2 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+import { MemberSkill, Skill } from '@/types/skills';
 
 interface MemberSkillsProps {
   userId: string;
@@ -38,7 +39,7 @@ export function MemberSkills({ userId, isOwnProfile = false, className }: Member
         .eq('user_id', userId)
         .order('added_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       setMemberSkills(data || []);
       setSelectedSkillIds(data?.map(ms => ms.skill_id) || []);
@@ -67,7 +68,7 @@ export function MemberSkills({ userId, isOwnProfile = false, className }: Member
           .eq('user_id', userId)
           .in('skill_id', skillsToRemove);
 
-        if (error) throw error;
+        if (error) {throw error;}
       }
 
       // Add new skills
@@ -82,7 +83,7 @@ export function MemberSkills({ userId, isOwnProfile = false, className }: Member
             }))
           );
 
-        if (error) throw error;
+        if (error) {throw error;}
       }
 
       // Reload skills
@@ -108,7 +109,7 @@ export function MemberSkills({ userId, isOwnProfile = false, className }: Member
   };
 
   const groupedSkills = memberSkills.reduce((acc, ms) => {
-    if (!ms.skill) return acc;
+    if (!ms.skill) {return acc;}
     const category = ms.skill.category;
     if (!acc[category]) {
       acc[category] = [];

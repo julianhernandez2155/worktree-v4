@@ -1,10 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { 
   X, 
   Calendar,
@@ -24,8 +19,14 @@ import {
   Check,
   RotateCcw
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+
 import { TaskSkillRequirements } from '@/components/tasks/TaskSkillRequirements';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
 
 interface Subtask {
   id: string;
@@ -99,7 +100,7 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
         .eq('id', taskId)
         .single();
 
-      if (taskError) throw taskError;
+      if (taskError) {throw taskError;}
       // Ensure subtasks is an array
       const taskWithSubtasks = {
         ...taskData,
@@ -180,7 +181,7 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
   };
 
   const handleSave = async () => {
-    if (!task) return;
+    if (!task) {return;}
 
     try {
       setSaving(true);
@@ -196,7 +197,7 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
         })
         .eq('id', task.id);
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       await loadTaskDetails();
       setEditing(false);
@@ -209,7 +210,7 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
   };
 
   const handleAddSubtask = async () => {
-    if (!task || !newSubtask.trim()) return;
+    if (!task || !newSubtask.trim()) {return;}
 
     const newSubtaskItem: Subtask = {
       id: crypto.randomUUID(),
@@ -226,7 +227,7 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
         .update({ subtasks: updatedSubtasks })
         .eq('id', task.id);
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       setTask({ ...task, subtasks: updatedSubtasks });
       setEditedTask({ ...editedTask, subtasks: updatedSubtasks });
@@ -238,7 +239,7 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
   };
 
   const handleToggleSubtask = async (subtaskId: string) => {
-    if (!task) return;
+    if (!task) {return;}
 
     const updatedSubtasks = (task.subtasks || []).map(st => 
       st.id === subtaskId 
@@ -256,7 +257,7 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
         .update({ subtasks: updatedSubtasks })
         .eq('id', task.id);
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       setTask({ ...task, subtasks: updatedSubtasks });
       setEditedTask({ ...editedTask, subtasks: updatedSubtasks });
@@ -266,7 +267,7 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
   };
 
   const handleDeleteSubtask = async (subtaskId: string) => {
-    if (!task) return;
+    if (!task) {return;}
 
     const updatedSubtasks = (task.subtasks || []).filter(st => st.id !== subtaskId);
 
@@ -276,7 +277,7 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
         .update({ subtasks: updatedSubtasks })
         .eq('id', task.id);
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       setTask({ ...task, subtasks: updatedSubtasks });
       setEditedTask({ ...editedTask, subtasks: updatedSubtasks });
@@ -286,7 +287,7 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
   };
 
   const handleCompleteTask = async () => {
-    if (!task) return;
+    if (!task) {return;}
 
     try {
       setCompleting(true);
@@ -308,7 +309,7 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
         .update(updateData)
         .eq('id', task.id);
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       await loadTaskDetails();
       onUpdate?.();
@@ -320,7 +321,7 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
   };
 
   const handleDeleteTask = async () => {
-    if (!task) return;
+    if (!task) {return;}
 
     try {
       setDeleting(true);
@@ -343,7 +344,7 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
         .delete()
         .eq('id', task.id);
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       onUpdate?.();
       onClose();
@@ -378,7 +379,7 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
   };
 
   const getDaysUntilDue = () => {
-    if (!task?.due_date) return null;
+    if (!task?.due_date) {return null;}
     const due = new Date(task.due_date);
     const today = new Date();
     const diffTime = due.getTime() - today.getTime();
@@ -388,15 +389,15 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
 
   const getDueDateColor = () => {
     const days = getDaysUntilDue();
-    if (days === null) return 'text-gray-400';
-    if (days < 0) return 'text-red-400';
-    if (days === 0) return 'text-orange-400';
-    if (days <= 3) return 'text-yellow-400';
+    if (days === null) {return 'text-gray-400';}
+    if (days < 0) {return 'text-red-400';}
+    if (days === 0) {return 'text-orange-400';}
+    if (days <= 3) {return 'text-yellow-400';}
     return 'text-gray-400';
   };
 
-  if (loading) return <LoadingSpinner />;
-  if (!task) return null;
+  if (loading) {return <LoadingSpinner />;}
+  if (!task) {return null;}
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">

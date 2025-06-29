@@ -1,9 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { useRouter } from 'next/navigation';
 import { 
   Clock, 
   Users, 
@@ -15,6 +11,11 @@ import {
   AlertCircle,
   ListChecks
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
 import { cn } from '@/lib/utils';
 
 interface ProjectCardProps {

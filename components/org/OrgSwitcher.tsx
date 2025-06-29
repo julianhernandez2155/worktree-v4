@@ -1,8 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -18,8 +16,12 @@ import {
   X,
   Compass
 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+
 
 interface Organization {
   id: string;

@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+
 import { MemberDirectory } from '@/components/members/MemberDirectory';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 

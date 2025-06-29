@@ -1,10 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { TaskDetailModal } from './TaskDetailModal';
 import { 
   Calendar,
   Clock,
@@ -16,7 +11,15 @@ import {
   ChevronRight,
   ListChecks
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+
+import { TaskDetailModal } from './TaskDetailModal';
+
 
 interface MyTasksViewProps {
   orgSlug: string;
@@ -61,7 +64,7 @@ export function MyTasksView({ orgSlug }: MyTasksViewProps) {
   const loadMyTasks = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {return;}
 
       // Load tasks from the my_tasks view
       const { data: tasksData, error } = await supabase
@@ -71,7 +74,7 @@ export function MyTasksView({ orgSlug }: MyTasksViewProps) {
         .not('status', 'in', '["completed", "verified"]')
         .order('due_date', { ascending: true, nullsFirst: false });
 
-      if (error) throw error;
+      if (error) {throw error;}
       setTasks(tasksData || []);
     } catch (error) {
       console.error('Error loading tasks:', error);
@@ -133,7 +136,7 @@ export function MyTasksView({ orgSlug }: MyTasksViewProps) {
     totalHours: tasks.reduce((sum, t) => sum + (t.estimated_hours || 0), 0)
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) {return <LoadingSpinner />;}
 
   return (
     <div className="space-y-6">

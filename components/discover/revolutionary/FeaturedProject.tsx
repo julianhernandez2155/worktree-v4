@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 import { 
   Building, 
   Sparkles,
@@ -10,7 +9,10 @@ import {
   ArrowRight,
   Star
 } from 'lucide-react';
+import Image from 'next/image';
+
 import { cn } from '@/lib/utils';
+
 import { CountdownTimer } from './CountdownTimer';
 
 interface FeaturedProjectProps {
@@ -22,24 +24,13 @@ export function FeaturedProject({ project }: FeaturedProjectProps) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-3xl mb-8"
+      className="relative overflow-hidden rounded-2xl mb-8 glass-elevated"
     >
-      {/* Animated gradient background */}
-      <motion.div
-        className="absolute inset-0"
-        animate={{
-          background: [
-            'linear-gradient(135deg, #00FF88 0%, #00D9FF 100%)',
-            'linear-gradient(135deg, #00D9FF 0%, #9B59FF 100%)',
-            'linear-gradient(135deg, #9B59FF 0%, #00FF88 100%)',
-            'linear-gradient(135deg, #00FF88 0%, #00D9FF 100%)',
-          ]
-        }}
-        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-      />
+      {/* Subtle gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-neon-green/5 via-transparent to-blue-500/5" />
       
       {/* Content */}
-      <div className="relative bg-dark-card/90 backdrop-blur-xl p-8 md:p-12">
+      <div className="relative p-8 md:p-10">
         <div className="flex flex-col md:flex-row gap-8 items-center">
           {/* Left side - Project info */}
           <div className="flex-1">
@@ -85,12 +76,12 @@ export function FeaturedProject({ project }: FeaturedProjectProps) {
             {/* Match score */}
             {project.match_score >= 70 && (
               <div className="flex items-center gap-2 mb-6">
-                <div className="flex items-center gap-1 px-3 py-1.5 bg-neon-green/20 rounded-full">
+                <div className="flex items-center gap-1 px-3 py-1.5 bg-neon-green/10 border border-neon-green/30 rounded-full">
                   <Sparkles className="h-4 w-4 text-neon-green" />
-                  <span className="text-neon-green font-bold">{project.match_score}% Match</span>
+                  <span className="text-neon-green font-semibold">{project.match_score}% Match</span>
                 </div>
-                <span className="text-dark-muted">•</span>
-                <span className="text-white">Perfect for your skills!</span>
+                <span className="text-gray-500">•</span>
+                <span className="text-gray-300">Perfect for your skills!</span>
               </div>
             )}
 
@@ -129,45 +120,27 @@ export function FeaturedProject({ project }: FeaturedProjectProps) {
           </div>
 
           {/* Right side - Visual element */}
-          <div className="relative">
-            <motion.div
-              animate={{ 
-                rotate: [0, 5, -5, 0],
-                scale: [1, 1.05, 1]
-              }}
-              transition={{ duration: 4, repeat: Infinity }}
-              className="w-64 h-64 bg-gradient-to-br from-neon-green/20 to-blue-500/20 
-                       rounded-3xl backdrop-blur-sm border border-white/10"
-            >
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Sparkles className="h-24 w-24 text-white/20" />
-              </div>
+          <div className="relative hidden md:block">
+            <div className="w-48 h-48 bg-gradient-to-br from-neon-green/10 to-blue-500/10 
+                       rounded-2xl border border-dark-border flex items-center justify-center">
+              <Sparkles className="h-16 w-16 text-neon-green/30" />
               
-              {/* Floating skill badges */}
+              {/* Skill badges - static positioning */}
               {project.skills_to_develop?.slice(0, 3).map((skill: string, idx: number) => (
-                <motion.div
+                <div
                   key={skill}
-                  animate={{
-                    y: [0, -10, 0],
-                    x: [0, 5, 0]
-                  }}
-                  transition={{
-                    duration: 3,
-                    delay: idx * 0.5,
-                    repeat: Infinity
-                  }}
                   className={cn(
-                    "absolute px-3 py-1.5 bg-dark-card/80 backdrop-blur-sm",
-                    "border border-white/20 rounded-full text-xs text-white",
-                    idx === 0 && "top-4 left-4",
-                    idx === 1 && "bottom-4 right-4",
-                    idx === 2 && "top-1/2 right-4"
+                    "absolute px-3 py-1.5 bg-dark-surface",
+                    "border border-dark-border rounded-full text-xs text-gray-400",
+                    idx === 0 && "top-2 -left-2",
+                    idx === 1 && "-bottom-2 -right-2",
+                    idx === 2 && "top-1/2 -right-4"
                   )}
                 >
                   {skill}
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

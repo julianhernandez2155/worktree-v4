@@ -1,12 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { ProjectCard } from './ProjectCard';
-import { CreateProjectModal } from './CreateProjectModal';
 import { 
   Plus, 
   FolderOpen, 
@@ -17,7 +10,16 @@ import {
   Filter,
   Search
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+
+import { CreateProjectModal } from './CreateProjectModal';
+import { ProjectCard } from './ProjectCard';
 
 interface Project {
   id: string;
@@ -74,7 +76,7 @@ export function ProjectsView({ orgSlug }: ProjectsViewProps) {
         .eq('slug', orgSlug)
         .single();
 
-      if (!org) return;
+      if (!org) {return;}
 
       // Load projects with task counts
       const { data: projectsData, error } = await supabase
@@ -97,7 +99,7 @@ export function ProjectsView({ orgSlug }: ProjectsViewProps) {
         .eq('organization_id', org.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       // Calculate stats for each project
       const projectsWithStats = (projectsData || []).map(project => {

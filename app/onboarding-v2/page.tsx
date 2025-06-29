@@ -1,17 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { UserType } from '@/lib/types/onboarding';
 import { 
   Users, 
   Building, 
   BarChart3,
   ArrowRight
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
+import { UserType } from '@/lib/types/onboarding';
+
 
 export default function OnboardingV2Page() {
   const router = useRouter();
@@ -48,7 +50,7 @@ export default function OnboardingV2Page() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
+      if (!user) {throw new Error('No user found');}
 
       // Create or update onboarding progress
       const { error } = await supabase
@@ -60,7 +62,7 @@ export default function OnboardingV2Page() {
           completion_percentage: 20
         });
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       // Navigate to appropriate onboarding flow
       switch (path) {

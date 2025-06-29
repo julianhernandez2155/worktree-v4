@@ -1,10 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
 import { 
   School, 
   User, 
@@ -15,6 +10,13 @@ import {
   ChevronLeft,
   Check
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
+
 
 const ONBOARDING_STEPS = [
   { id: 'university', title: 'University', icon: School },
@@ -99,7 +101,7 @@ export default function OnboardingPage() {
           }
         });
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       // Add initial skills
       if (formData.skills.length > 0) {
@@ -111,7 +113,7 @@ export default function OnboardingPage() {
             .eq('name', skillName)
             .single();
 
-          if (skill) return skill.id;
+          if (skill) {return skill.id;}
 
           // Create skill if it doesn't exist
           const { data: newSkill } = await supabase
@@ -147,7 +149,7 @@ export default function OnboardingPage() {
 
   const renderStepContent = () => {
     const currentStepData = ONBOARDING_STEPS[currentStep];
-    if (!currentStepData) return null;
+    if (!currentStepData) {return null;}
     
     switch (currentStepData.id) {
       case 'university':

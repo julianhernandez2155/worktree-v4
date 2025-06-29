@@ -1,10 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { 
   X, 
   User,
@@ -14,6 +9,12 @@ import {
   AlertCircle,
   Search
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
 interface Member {
@@ -109,7 +110,7 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
         .eq('slug', orgSlug)
         .single();
 
-      if (!org) return;
+      if (!org) {return;}
 
       // Load organization members with their profiles
       const { data: membersData } = await supabase
@@ -124,7 +125,7 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
         `)
         .eq('organization_id', org.id);
 
-      if (!membersData) return;
+      if (!membersData) {return;}
 
       // Get all member IDs
       const memberIds = membersData.map(m => m.user_id);
@@ -221,7 +222,7 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
   };
 
   const handleAssign = async () => {
-    if (selectedMembers.length === 0) return;
+    if (selectedMembers.length === 0) {return;}
 
     try {
       setAssigning(true);
@@ -239,7 +240,7 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
             p_is_primary: i === 0 && existingAssignees.length === 0 // First assignee is primary if no existing
           });
 
-        if (error) throw error;
+        if (error) {throw error;}
       }
 
       // Update task status if it was pending
@@ -287,7 +288,7 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
     };
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) {return <LoadingSpinner />;}
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -393,7 +394,7 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
                 <div
                   key={member.user_id}
                   onClick={() => {
-                    if (isExisting) return;
+                    if (isExisting) {return;}
                     if (multiSelect) {
                       setSelectedMembers(prev => 
                         isSelected 

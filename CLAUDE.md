@@ -186,3 +186,38 @@ npm run db:types
 - Skills normalized via member_skills (not arrays in profiles)
 - contributions.contributor_id is LEGACY - use task_assignees
 - Missing universities table (referenced by profiles.university_id)
+
+## Recent Feature Updates (June 28, 2025)
+
+### Navigation System
+- **Top Navigation Bar**: Centered main navigation with Discover, Organizations, Portfolio
+- **Context Sidebar**: Dynamic sidebar that changes based on current page context
+- **Persistent Layout**: Combined TopNavBar and ContextSidebar in PersistentLayout wrapper
+
+### Discover Page Enhancements
+- **For You Page**: Curated experience showing only top 4 matches (50%+ match score)
+- **All Projects Page**: Full browsing with search, filters, and infinite scroll
+- **Sprout Empty State**: Friendly mascot guidance when no good matches found
+- **Ambient Orbs**: Subtle background animation replacing particle effects
+
+### Project Cards Optimization
+- **Larger project titles** (text-xl, font-bold)
+- **Skills reorganization**:
+  - "Skills Needed": Shows required skills (green for matched, gray for missing)
+  - "Skill Growth Opportunities": Placeholder for AI-generated skill suggestions
+- **Commitment levels**: Low/Medium/High/Intensive instead of hours
+- **Clickable org names**: Links to organization profile page
+
+### Organization Profile Page
+- **Route**: `/dashboard/org/[slug]/profile`
+- **Features**:
+  - Header with logo, name, verification badge, member/project counts
+  - Three tabs: About (mission/values), Projects (open positions), Contact
+  - Admin edit button (visible to org admins only)
+  - Ready for future public viewing at `/org/[slug]`
+- **Integration**: Org names on project cards link to profiles
+
+### Database Considerations
+- Public projects use `internal_projects` table with `is_public=true`
+- Organization profiles pull from existing `organizations` table
+- Consider adding fields: mission, values, social_links, founded_date

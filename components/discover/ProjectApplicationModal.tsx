@@ -1,10 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { 
   X, 
   Clock, 
@@ -16,6 +11,12 @@ import {
   Sparkles,
   ChevronRight
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
 interface ProjectApplicationModalProps {
@@ -51,7 +52,7 @@ export function ProjectApplicationModal({
     try {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {return;}
 
       // Load project details
       const { data: projectData } = await supabase
@@ -103,7 +104,7 @@ export function ProjectApplicationModal({
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {return;}
 
       // Calculate skill match score
       const { data: matchData } = await supabase.rpc('calculate_skill_match_score', {
@@ -126,7 +127,7 @@ export function ProjectApplicationModal({
           missing_skills: matchData?.missing_required_skills || []
         });
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       // Track view
       await supabase.from('project_views').insert({
@@ -172,7 +173,7 @@ export function ProjectApplicationModal({
     );
   }
 
-  if (!project || !userProfile) return null;
+  if (!project || !userProfile) {return null;}
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">

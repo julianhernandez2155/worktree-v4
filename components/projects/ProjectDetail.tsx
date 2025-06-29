@@ -1,16 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
-import { AssignTaskModal } from '@/components/tasks/AssignTaskModal';
-import { AddTaskModal } from '@/components/tasks/AddTaskModal';
-import { NaturalLanguageTaskInput } from '@/components/tasks/NaturalLanguageTaskInput';
-import { MakePublicModal } from '@/components/projects/MakePublicModal';
-import { ProjectApplicationsList } from '@/components/projects/ProjectApplicationsList';
 import { 
   ArrowLeft,
   Clock, 
@@ -31,8 +20,21 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+import { MakePublicModal } from '@/components/projects/MakePublicModal';
+import { ProjectApplicationsList } from '@/components/projects/ProjectApplicationsList';
+import { AddTaskModal } from '@/components/tasks/AddTaskModal';
+import { AssignTaskModal } from '@/components/tasks/AssignTaskModal';
+import { NaturalLanguageTaskInput } from '@/components/tasks/NaturalLanguageTaskInput';
+import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
+
 
 interface ProjectDetailProps {
   orgSlug: string;
@@ -106,7 +108,7 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
         .eq('id', projectId)
         .single();
 
-      if (projectError) throw projectError;
+      if (projectError) {throw projectError;}
       setProject(projectData);
 
       // Load tasks with assignee details
@@ -123,7 +125,7 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
         .eq('project_id', projectId)
         .order('created_at', { ascending: true });
 
-      if (tasksError) throw tasksError;
+      if (tasksError) {throw tasksError;}
       
       // Load assignees for all tasks
       const taskIds = tasksData?.map(t => t.id) || [];
@@ -147,7 +149,7 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
 
       // Group assignees by task
       const assigneesByTask = assigneesData?.reduce((acc: any, item) => {
-        if (!acc[item.task_id]) acc[item.task_id] = [];
+        if (!acc[item.task_id]) {acc[item.task_id] = [];}
         if (item.assignee) {
           acc[item.task_id].push({
             id: item.assignee.id,
@@ -216,15 +218,15 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
   };
 
   const getDueDateStatus = (dueDate: string | null) => {
-    if (!dueDate) return null;
+    if (!dueDate) {return null;}
     const due = new Date(dueDate);
     const today = new Date();
     const diffDays = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (diffDays < 0) return { text: 'Overdue', color: 'text-red-400' };
-    if (diffDays === 0) return { text: 'Due today', color: 'text-orange-400' };
-    if (diffDays === 1) return { text: 'Due tomorrow', color: 'text-yellow-400' };
-    if (diffDays <= 7) return { text: `${diffDays} days`, color: 'text-blue-400' };
+    if (diffDays < 0) {return { text: 'Overdue', color: 'text-red-400' };}
+    if (diffDays === 0) {return { text: 'Due today', color: 'text-orange-400' };}
+    if (diffDays === 1) {return { text: 'Due tomorrow', color: 'text-yellow-400' };}
+    if (diffDays <= 7) {return { text: `${diffDays} days`, color: 'text-blue-400' };}
     return { text: `${diffDays} days`, color: 'text-gray-400' };
   };
 
@@ -255,7 +257,7 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
         .update(updateData)
         .eq('id', projectId);
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       // Reload project details
       await loadProjectDetails();
@@ -272,13 +274,13 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
     assigned: tasks.filter(t => t.assignees && t.assignees.length > 0).length,
     completed: tasks.filter(t => t.status === 'completed' || t.status === 'verified').length,
     overdue: tasks.filter(t => {
-      if (!t.due_date || t.status === 'completed' || t.status === 'verified') return false;
+      if (!t.due_date || t.status === 'completed' || t.status === 'verified') {return false;}
       return new Date(t.due_date) < new Date();
     }).length
   };
 
-  if (loading) return <LoadingSpinner />;
-  if (!project) return null;
+  if (loading) {return <LoadingSpinner />;}
+  if (!project) {return null;}
 
   return (
     <div className="space-y-6">

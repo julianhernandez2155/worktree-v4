@@ -1,13 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { ProjectDiscoverCard } from './ProjectDiscoverCard';
-import { ProjectApplicationModal } from './ProjectApplicationModal';
-import { ProjectDetailModal } from './ProjectDetailModal';
 import { 
   Search, 
   Clock,
@@ -15,8 +7,18 @@ import {
   Bell,
   Zap
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { NeonButton } from '@/components/ui/NeonButton';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
+
+import { ProjectApplicationModal } from './ProjectApplicationModal';
+import { ProjectDetailModal } from './ProjectDetailModal';
+import { ProjectDiscoverCard } from './ProjectDiscoverCard';
 
 interface Project {
   id: string;
@@ -88,7 +90,7 @@ export function DiscoverFeed() {
           p_offset: pageNum * ITEMS_PER_PAGE
         });
 
-        if (error) throw error;
+        if (error) {throw error;}
 
         // Transform the RPC response to match our expected format
         const projectsWithOrg = recommendedProjects?.map((p: any) => ({
@@ -198,7 +200,7 @@ export function DiscoverFeed() {
 
       const { data: projectsData, error } = await query;
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       // If user is logged in, get their saved and applied status
       if (user && projectsData) {
@@ -374,10 +376,10 @@ export function DiscoverFeed() {
   const toggleSaveProject = async (projectId: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {return;}
 
       const project = projects.find(p => p.id === projectId);
-      if (!project) return;
+      if (!project) {return;}
 
       if (project.is_saved) {
         await supabase

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { TaskRequiredSkill, Skill } from '@/types/skills';
-import { SkillSelector } from '@/components/skills/SkillSelector';
 import { Briefcase, Star } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { SkillSelector } from '@/components/skills/SkillSelector';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+import { TaskRequiredSkill, Skill } from '@/types/skills';
 
 interface TaskSkillRequirementsProps {
   taskId?: string;
@@ -76,7 +77,7 @@ export function TaskSkillRequirements({
         .eq('is_active', true)
         .order('name');
 
-      if (error) throw error;
+      if (error) {throw error;}
       setAllSkills(data || []);
     } catch (error) {
       console.error('Error loading skills:', error);
@@ -84,7 +85,7 @@ export function TaskSkillRequirements({
   };
 
   const loadTaskSkills = async () => {
-    if (!taskId) return;
+    if (!taskId) {return;}
     
     setLoading(true);
     try {
@@ -96,7 +97,7 @@ export function TaskSkillRequirements({
         `)
         .eq('task_id', taskId);
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       setTaskSkills(data || []);
       
@@ -194,7 +195,7 @@ export function TaskSkillRequirements({
                   .filter(ts => ts.importance === 'required')
                   .map(ts => {
                     const skill = ts.skill;
-                    if (!skill) return null;
+                    if (!skill) {return null;}
                     return (
                       <span
                         key={ts.skill_id}
@@ -222,7 +223,7 @@ export function TaskSkillRequirements({
                   .filter(ts => ts.importance === 'preferred')
                   .map(ts => {
                     const skill = ts.skill;
-                    if (!skill) return null;
+                    if (!skill) {return null;}
                     return (
                       <span
                         key={ts.skill_id}

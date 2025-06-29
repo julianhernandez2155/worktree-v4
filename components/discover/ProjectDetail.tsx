@@ -1,9 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
 import { 
   Building,
   Calendar,
@@ -20,7 +16,13 @@ import {
   Target,
   TrendingUp
 } from 'lucide-react';
+import Image from 'next/image';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
 import { cn } from '@/lib/utils';
+
 import { Project } from './DiscoverPage';
 
 interface ProjectDetailProps {
@@ -38,7 +40,7 @@ function useTypingEffect(text: string, speed = 30) {
   const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
-    if (!text) return;
+    if (!text) {return;}
     
     setIsTyping(true);
     setDisplayedText('');

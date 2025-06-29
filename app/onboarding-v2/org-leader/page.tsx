@@ -1,11 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { OrgQuickSetup } from '@/lib/types/onboarding';
 import { 
   Building,
   Users,
@@ -15,6 +9,14 @@ import {
   Clock,
   ChevronRight
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
+import { OrgQuickSetup } from '@/lib/types/onboarding';
+
 
 export default function OrgLeaderOnboardingPage() {
   const router = useRouter();
@@ -107,7 +109,7 @@ export default function OrgLeaderOnboardingPage() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
+      if (!user) {throw new Error('No user found');}
 
       // Create organization
       const orgSlug = formData.name.toLowerCase().replace(/\s+/g, '-');
@@ -126,7 +128,7 @@ export default function OrgLeaderOnboardingPage() {
         .select()
         .single();
 
-      if (orgError) throw orgError;
+      if (orgError) {throw orgError;}
 
       // Add user as organization admin
       const { error: memberError } = await supabase
@@ -137,7 +139,7 @@ export default function OrgLeaderOnboardingPage() {
           role: 'admin'
         });
 
-      if (memberError) throw memberError;
+      if (memberError) {throw memberError;}
 
       // Create or update user profile
       const { error: profileError } = await supabase
@@ -151,7 +153,7 @@ export default function OrgLeaderOnboardingPage() {
           onboarding_completed: false
         });
 
-      if (profileError) throw profileError;
+      if (profileError) {throw profileError;}
 
       // Update onboarding progress
       const { error: progressError } = await supabase
@@ -166,7 +168,7 @@ export default function OrgLeaderOnboardingPage() {
         })
         .eq('user_id', user.id);
 
-      if (progressError) throw progressError;
+      if (progressError) {throw progressError;}
 
       // Navigate to project setup
       router.push(`/onboarding-v2/org-leader/project?org=${org.id}`);

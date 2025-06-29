@@ -1,7 +1,5 @@
 'use client';
 
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
 import { 
   Clock, 
   Users, 
@@ -19,9 +17,14 @@ import {
   Zap,
   Heart
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useState } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { cn } from '@/lib/utils';
+
+
 import { SkillMatchBreakdown } from './SkillMatchBreakdown';
 
 interface ProjectDiscoverCardProps {
@@ -99,16 +102,16 @@ export function ProjectDiscoverCard({ project, onSave, onApply }: ProjectDiscove
   };
   
   const getDeadlineInfo = () => {
-    if (!project.application_deadline) return null;
+    if (!project.application_deadline) {return null;}
     
     const deadline = new Date(project.application_deadline);
     const now = new Date();
     const daysLeft = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (daysLeft < 0) return { text: 'Deadline passed', urgent: true };
-    if (daysLeft === 0) return { text: 'Ends today', urgent: true };
-    if (daysLeft === 1) return { text: 'Ends tomorrow', urgent: true };
-    if (daysLeft <= 7) return { text: `${daysLeft} days left`, urgent: true };
+    if (daysLeft < 0) {return { text: 'Deadline passed', urgent: true };}
+    if (daysLeft === 0) {return { text: 'Ends today', urgent: true };}
+    if (daysLeft === 1) {return { text: 'Ends tomorrow', urgent: true };}
+    if (daysLeft <= 7) {return { text: `${daysLeft} days left`, urgent: true };}
     return { text: `${daysLeft} days left`, urgent: false };
   };
 

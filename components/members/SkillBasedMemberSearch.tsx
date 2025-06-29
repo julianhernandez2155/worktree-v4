@@ -1,12 +1,13 @@
 'use client';
 
+import { Search, Users, UserPlus, ExternalLink, CheckCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { MemberWithSkills, Skill } from '@/types/skills';
+
 import { SkillSelector } from '@/components/skills/SkillSelector';
 import { NeonButton } from '@/components/ui/NeonButton';
-import { Search, Users, UserPlus, ExternalLink, CheckCircle } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+import { MemberWithSkills, Skill } from '@/types/skills';
 
 interface SkillBasedMemberSearchProps {
   organizationId: string;
@@ -69,7 +70,7 @@ export function SkillBasedMemberSearch({
         `)
         .eq('organization_id', organizationId);
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       // Transform data to MemberWithSkills format
       const members: MemberWithSkills[] = data?.map(member => ({

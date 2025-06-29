@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { X, Plus, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { X, Plus, Check } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+
+import { cn } from '@/lib/utils';
+
 
 interface SkillSearchProps {
   availableSkills: string[];

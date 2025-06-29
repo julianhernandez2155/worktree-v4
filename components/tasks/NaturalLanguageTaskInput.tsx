@@ -1,9 +1,5 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { 
   Sparkles,
   Wand2,
@@ -13,6 +9,11 @@ import {
   Check,
   Flag
 } from 'lucide-react';
+import { useState, useCallback } from 'react';
+
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { parseNaturalDate, formatDueDate, toISODateString, parseLocalISODate } from '@/lib/utils/date-parser';
 
@@ -65,7 +66,7 @@ export function NaturalLanguageTaskInput({
   ];
 
   const handleParse = useCallback(async () => {
-    if (!input.trim()) return;
+    if (!input.trim()) {return;}
 
     setIsProcessing(true);
     setError(null);
@@ -79,7 +80,7 @@ export function NaturalLanguageTaskInput({
         .eq('slug', orgSlug)
         .single();
 
-      if (!org) throw new Error('Organization not found');
+      if (!org) {throw new Error('Organization not found');}
 
       // Get user's timezone
       const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -94,8 +95,8 @@ export function NaturalLanguageTaskInput({
         },
       });
 
-      if (parseError) throw parseError;
-      if (!data?.success) throw new Error(data?.error || 'Failed to parse task');
+      if (parseError) {throw parseError;}
+      if (!data?.success) {throw new Error(data?.error || 'Failed to parse task');}
 
       // Always parse dates on the frontend for correct timezone handling
       if (data.parsed.due_date) {
@@ -124,14 +125,14 @@ export function NaturalLanguageTaskInput({
   }, [input, supabase, orgSlug, memberNames]);
 
   const handleCreateTask = useCallback(async () => {
-    if (!preview) return;
+    if (!preview) {return;}
 
     setIsProcessing(true);
     setError(null);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      if (!user) {throw new Error('Not authenticated');}
 
       // Create the task
       const taskData = {
@@ -159,7 +160,7 @@ export function NaturalLanguageTaskInput({
         .select()
         .single();
 
-      if (taskError) throw taskError;
+      if (taskError) {throw taskError;}
 
       // Assign members if any matched
       if (preview.assignee_matches && preview.assignee_matches.length > 0) {

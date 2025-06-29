@@ -1,5 +1,6 @@
-import { RevolutionaryDiscover } from '@/components/discover/RevolutionaryDiscover';
 import { Metadata } from 'next';
+
+import { ForYouPage } from '@/components/discover/ForYouPage';
 
 export const metadata: Metadata = {
   title: 'Discover Opportunities | Worktree',
@@ -7,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function Discover() {
-  return <RevolutionaryDiscover />;
+  return <ForYouPage />;
 }

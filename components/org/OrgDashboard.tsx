@@ -1,11 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
+import { motion } from 'framer-motion';
 import { 
   Users, 
   FolderOpen, 
@@ -18,8 +13,14 @@ import {
   Target,
   Calendar
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+
+import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
 
 interface OrgDashboardProps {
   orgSlug: string;
@@ -69,7 +70,7 @@ export function OrgDashboard({ orgSlug }: OrgDashboardProps) {
         .eq('slug', orgSlug)
         .single();
 
-      if (orgError) throw orgError;
+      if (orgError) {throw orgError;}
       setOrganization(orgData);
 
       // Load members

@@ -1,10 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
 import { 
   Search,
   Users,
@@ -13,6 +8,13 @@ import {
   ChevronRight,
   SkipForward
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
+
 
 interface Organization {
   id: string;
@@ -90,7 +92,7 @@ export default function StudentOrganizationsPage() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
+      if (!user) {throw new Error('No user found');}
 
       // Add user to selected organizations
       if (selectedOrgs.length > 0) {
@@ -104,7 +106,7 @@ export default function StudentOrganizationsPage() {
           .from('organization_members')
           .insert(membershipData);
 
-        if (memberError) throw memberError;
+        if (memberError) {throw memberError;}
       }
 
       // Update onboarding progress
@@ -120,7 +122,7 @@ export default function StudentOrganizationsPage() {
         })
         .eq('user_id', user.id);
 
-      if (progressError) throw progressError;
+      if (progressError) {throw progressError;}
 
       // Mark onboarding as complete for now (skills will be contextual)
       const { error: profileError } = await supabase
@@ -128,7 +130,7 @@ export default function StudentOrganizationsPage() {
         .update({ onboarding_completed: true })
         .eq('id', user.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {throw profileError;}
 
       // Navigate to dashboard
       router.push('/dashboard');

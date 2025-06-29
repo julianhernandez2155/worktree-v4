@@ -72,9 +72,9 @@ const relativePatterns: Array<{
       const unit = match[2].toLowerCase();
       const today = new Date();
       
-      if (unit.startsWith('day')) return addDays(today, amount);
-      if (unit.startsWith('week')) return addWeeks(today, amount);
-      if (unit.startsWith('month')) return addMonths(today, amount);
+      if (unit.startsWith('day')) {return addDays(today, amount);}
+      if (unit.startsWith('week')) {return addWeeks(today, amount);}
+      if (unit.startsWith('month')) {return addMonths(today, amount);}
       
       return today;
     },
@@ -88,8 +88,8 @@ const relativePatterns: Array<{
       const unit = match[1].toLowerCase();
       const today = new Date();
       
-      if (unit === 'week') return addWeeks(today, 1);
-      if (unit === 'month') return addMonths(today, 1);
+      if (unit === 'week') {return addWeeks(today, 1);}
+      if (unit === 'month') {return addMonths(today, 1);}
       
       return today;
     },
@@ -103,8 +103,8 @@ const relativePatterns: Array<{
       const unit = match[2].toLowerCase();
       const today = new Date();
       
-      if (unit === 'week') return endOfWeek(today, { weekStartsOn: 1 }); // Monday start
-      if (unit === 'month') return endOfMonth(today);
+      if (unit === 'week') {return endOfWeek(today, { weekStartsOn: 1 });} // Monday start
+      if (unit === 'month') {return endOfMonth(today);}
       
       return today;
     },
@@ -123,7 +123,7 @@ const relativePatterns: Array<{
       // If target day hasn't happened this week yet, use it
       // Otherwise, use next week's occurrence
       let daysToAdd = targetDay - currentDay;
-      if (daysToAdd <= 0) daysToAdd += 7;
+      if (daysToAdd <= 0) {daysToAdd += 7;}
       
       return addDays(today, daysToAdd);
     },

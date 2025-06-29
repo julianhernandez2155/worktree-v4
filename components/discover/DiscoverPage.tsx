@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
+
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { ProjectList } from './ProjectList';
-import { ProjectDetail } from './ProjectDetail';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+
+import { ProjectDetail } from './ProjectDetail';
+import { ProjectList } from './ProjectList';
+
 
 export interface Project {
   id: string;
@@ -95,10 +98,10 @@ export function DiscoverPage() {
   const handleSaveProject = async (projectId: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {return;}
 
       const project = projects.find(p => p.id === projectId);
-      if (!project) return;
+      if (!project) {return;}
 
       if (project.is_saved) {
         await supabase
@@ -146,7 +149,7 @@ export function DiscoverPage() {
     // For now, just mark as applied
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {return;}
 
       // Create application record
       await supabase
@@ -203,7 +206,7 @@ export function DiscoverPage() {
           onPassProject={handlePassProject}
           onApplyProject={handleApplyToProject}
           onNavigate={(direction) => {
-            if (!selectedProject) return;
+            if (!selectedProject) {return;}
             
             const currentIndex = projects.findIndex(p => p.id === selectedProject.id);
             let newIndex;

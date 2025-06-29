@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+
 import { MyTasksView } from '@/components/tasks/MyTasksView';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 interface MyTasksPageProps {
   params: Promise<{ slug: string }>;

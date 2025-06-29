@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
-import { GlassCard } from '@/components/ui/GlassCard';
 import { Calendar, AlertCircle, Users } from 'lucide-react';
+import { useMemo } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
 
 interface Role {
@@ -56,7 +57,7 @@ export function SuccessionTimeline({ roles }: SuccessionTimelineProps) {
     // Group roles by semester
     return semesters.map(semester => {
       const semesterRoles = roles.filter(role => {
-        if (!role.term_end_date) return false;
+        if (!role.term_end_date) {return false;}
         const endDate = new Date(role.term_end_date);
         return endDate >= semester.start && endDate <= semester.end;
       });

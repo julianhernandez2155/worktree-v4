@@ -1,9 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
 import { 
   X, 
   Plus, 
@@ -13,6 +9,11 @@ import {
   AlertCircle,
   Sparkles
 } from 'lucide-react';
+import { useState } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
 interface Task {
@@ -92,7 +93,7 @@ export function CreateProjectModal({ orgSlug, onClose, onProjectCreated }: Creat
         .eq('slug', orgSlug)
         .single();
 
-      if (!org) return;
+      if (!org) {return;}
 
       // Check how many members have each skill
       const { data: members } = await supabase
@@ -115,7 +116,7 @@ export function CreateProjectModal({ orgSlug, onClose, onProjectCreated }: Creat
   };
 
   const handleCreate = async () => {
-    if (!projectName || !description || tasks.length === 0) return;
+    if (!projectName || !description || tasks.length === 0) {return;}
 
     try {
       setCreating(true);
@@ -128,7 +129,7 @@ export function CreateProjectModal({ orgSlug, onClose, onProjectCreated }: Creat
         .eq('slug', orgSlug)
         .single();
 
-      if (!org || !user) return;
+      if (!org || !user) {return;}
 
       // Create the project
       const { data: project, error: projectError } = await supabase
@@ -145,7 +146,7 @@ export function CreateProjectModal({ orgSlug, onClose, onProjectCreated }: Creat
         .select()
         .single();
 
-      if (projectError) throw projectError;
+      if (projectError) {throw projectError;}
 
       // Create tasks (contributions)
       const taskInserts = tasks.map(task => ({
@@ -161,7 +162,7 @@ export function CreateProjectModal({ orgSlug, onClose, onProjectCreated }: Creat
         .from('contributions')
         .insert(taskInserts);
 
-      if (tasksError) throw tasksError;
+      if (tasksError) {throw tasksError;}
 
       onProjectCreated(project);
     } catch (error) {

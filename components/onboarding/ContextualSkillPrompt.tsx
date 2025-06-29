@@ -1,10 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { ContextualPrompt, SkillWithLevel } from '@/lib/types/onboarding';
 import { 
   Sparkles,
   Plus,
@@ -14,6 +9,12 @@ import {
   Briefcase,
   TrendingUp
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
+import { ContextualPrompt, SkillWithLevel } from '@/lib/types/onboarding';
 
 interface ContextualSkillPromptProps {
   prompt: ContextualPrompt;
@@ -58,13 +59,13 @@ export function ContextualSkillPrompt({
   };
 
   const handleSubmit = async () => {
-    if (selectedSkills.length === 0) return;
+    if (selectedSkills.length === 0) {return;}
     
     setLoading(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
+      if (!user) {throw new Error('No user found');}
 
       // Add skills to user profile
       for (const skill of selectedSkills) {
@@ -135,7 +136,7 @@ export function ContextualSkillPrompt({
     onDismiss?.();
   };
 
-  if (!show) return null;
+  if (!show) {return null;}
 
   return (
     <div className="fixed bottom-4 right-4 max-w-md w-full z-50 animate-slide-up">

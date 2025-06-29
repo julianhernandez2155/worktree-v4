@@ -1,8 +1,3 @@
-import { createClient } from '@/lib/supabase/server';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { DifficultyBadge } from '@/components/ui/DifficultyBadge';
-import { MatchQualityIndicator } from '@/components/ui/MatchQualityIndicator';
-import { NeonButton } from '@/components/ui/NeonButton';
 import { 
   Briefcase, 
   Target, 
@@ -13,6 +8,12 @@ import {
   Award
 } from 'lucide-react';
 import Link from 'next/link';
+
+import { DifficultyBadge } from '@/components/ui/DifficultyBadge';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { MatchQualityIndicator } from '@/components/ui/MatchQualityIndicator';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/server';
 
 export default async function DashboardPage() {
   const supabase = await createClient();

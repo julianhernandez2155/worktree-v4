@@ -1,12 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { MemberCard } from './MemberCard';
-import { SkillSearch } from './SkillSearch';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, 
   Search,
@@ -15,8 +9,16 @@ import {
   SlidersHorizontal,
   UserPlus
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useMemo } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+
+import { MemberCard } from './MemberCard';
+import { SkillSearch } from './SkillSearch';
 
 interface Member {
   id: string;
@@ -61,7 +63,7 @@ export function MemberDirectory({ orgSlug }: MemberDirectoryProps) {
         .eq('slug', orgSlug)
         .single();
 
-      if (!orgData) throw new Error('Organization not found');
+      if (!orgData) {throw new Error('Organization not found');}
       setOrganization(orgData);
 
       // Get members with their profiles
@@ -81,7 +83,7 @@ export function MemberDirectory({ orgSlug }: MemberDirectoryProps) {
         .eq('organization_id', orgData.id)
         .order('joined_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       // Now fetch skills for each member from member_skills table
       const memberIds = memberData?.map(m => m.user.id) || [];

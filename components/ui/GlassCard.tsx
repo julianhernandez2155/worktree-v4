@@ -1,8 +1,9 @@
 'use client';
 
-import { forwardRef, HTMLAttributes, ReactNode } from 'react';
-import { cn } from '@/lib/utils';
 import { motion, HTMLMotionProps } from 'framer-motion';
+import { forwardRef, HTMLAttributes, ReactNode } from 'react';
+
+import { cn } from '@/lib/utils';
 
 interface GlassCardProps extends HTMLMotionProps<"div"> {
   children: ReactNode;

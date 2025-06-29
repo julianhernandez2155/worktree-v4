@@ -1,10 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { 
   X, 
   Clock, 
@@ -22,6 +17,12 @@ import {
   ChevronRight
 } from 'lucide-react';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
 interface ProjectDetailModalProps {
@@ -134,7 +135,7 @@ export function ProjectDetailModal({
   const trackView = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {return;}
 
       await supabase.from('project_views').insert({
         project_id: projectId,
@@ -149,7 +150,7 @@ export function ProjectDetailModal({
   const updateViewDuration = async (duration: number) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {return;}
 
       // Update the most recent view with duration
       const { data: recentView } = await supabase
@@ -175,7 +176,7 @@ export function ProjectDetailModal({
   const toggleSave = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {return;}
 
       if (project.is_saved) {
         await supabase
@@ -206,17 +207,17 @@ export function ProjectDetailModal({
     );
   }
 
-  if (!project) return null;
+  if (!project) {return null;}
 
   const deadlineInfo = project.application_deadline ? (() => {
     const deadline = new Date(project.application_deadline);
     const now = new Date();
     const daysLeft = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (daysLeft < 0) return { text: 'Deadline passed', urgent: true };
-    if (daysLeft === 0) return { text: 'Ends today', urgent: true };
-    if (daysLeft === 1) return { text: 'Ends tomorrow', urgent: true };
-    if (daysLeft <= 7) return { text: `${daysLeft} days left`, urgent: true };
+    if (daysLeft < 0) {return { text: 'Deadline passed', urgent: true };}
+    if (daysLeft === 0) {return { text: 'Ends today', urgent: true };}
+    if (daysLeft === 1) {return { text: 'Ends tomorrow', urgent: true };}
+    if (daysLeft <= 7) {return { text: `${daysLeft} days left`, urgent: true };}
     return { text: deadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), urgent: false };
   })() : null;
 

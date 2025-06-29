@@ -1,11 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { ApplicationReviewModal } from './ApplicationReviewModal';
 import { 
   Users,
   Clock,
@@ -20,7 +14,16 @@ import {
   Mail,
   Award
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+
+import { ApplicationReviewModal } from './ApplicationReviewModal';
+
 
 interface Application {
   id: string;
@@ -83,7 +86,7 @@ export function ProjectApplicationsList({
         .eq('project_id', projectId)
         .order('applied_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {throw error;}
       setApplications(data || []);
     } catch (error) {
       console.error('Error loading applications:', error);
@@ -103,7 +106,7 @@ export function ProjectApplicationsList({
         })
         .eq('id', applicationId);
 
-      if (error) throw error;
+      if (error) {throw error;}
       
       // Reload applications
       await loadApplications();
@@ -133,7 +136,7 @@ export function ProjectApplicationsList({
   };
 
   const filteredApplications = applications.filter(app => {
-    if (filterStatus === 'all') return true;
+    if (filterStatus === 'all') {return true;}
     return app.status === filterStatus;
   });
 
@@ -144,7 +147,7 @@ export function ProjectApplicationsList({
     rejected: applications.filter(a => a.status === 'rejected').length
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) {return <LoadingSpinner />;}
 
   return (
     <>

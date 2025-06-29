@@ -1,6 +1,7 @@
 'use client';
 
 import { X, CheckCircle, Circle, TrendingUp, Sparkles } from 'lucide-react';
+
 import { GlassCard } from '@/components/ui/GlassCard';
 import { NeonButton } from '@/components/ui/NeonButton';
 import { cn } from '@/lib/utils';
@@ -21,16 +22,16 @@ export function SkillMatchBreakdown({
   onClose
 }: SkillMatchBreakdownProps) {
   const getMatchMessage = () => {
-    if (matchScore >= 90) return "You're an excellent match for this project!";
-    if (matchScore >= 75) return "You're a strong candidate for this project";
-    if (matchScore >= 60) return "You have good foundational skills for this project";
+    if (matchScore >= 90) {return "You're an excellent match for this project!";}
+    if (matchScore >= 75) {return "You're a strong candidate for this project";}
+    if (matchScore >= 60) {return "You have good foundational skills for this project";}
     return "This project will help you develop new skills";
   };
 
   const getMatchColor = () => {
-    if (matchScore >= 90) return "text-neon-green";
-    if (matchScore >= 75) return "text-blue-400";
-    if (matchScore >= 60) return "text-yellow-400";
+    if (matchScore >= 90) {return "text-neon-green";}
+    if (matchScore >= 75) {return "text-blue-400";}
+    if (matchScore >= 60) {return "text-yellow-400";}
     return "text-orange-400";
   };
 

@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { 
   Building, 
   Calendar, 
@@ -11,7 +10,10 @@ import {
   CheckCircle,
   Sparkles
 } from 'lucide-react';
+import Image from 'next/image';
+
 import { cn } from '@/lib/utils';
+
 import { Project } from './DiscoverPage';
 
 interface ProjectCardProps {
@@ -39,7 +41,7 @@ export function ProjectCard({
 
   // Format deadline
   const formatDeadline = () => {
-    if (!project.application_deadline) return 'Rolling basis';
+    if (!project.application_deadline) {return 'Rolling basis';}
     
     const deadline = new Date(project.application_deadline);
     const formatted = deadline.toLocaleDateString('en-US', { 
@@ -47,18 +49,18 @@ export function ProjectCard({
       day: 'numeric' 
     });
     
-    if (daysLeft === 0) return `Due today`;
-    if (daysLeft === 1) return `Due tomorrow`;
-    if (daysLeft && daysLeft < 0) return `Closed`;
-    if (daysLeft && daysLeft <= 7) return `${formatted} (${daysLeft} days)`;
+    if (daysLeft === 0) {return `Due today`;}
+    if (daysLeft === 1) {return `Due tomorrow`;}
+    if (daysLeft && daysLeft < 0) {return `Closed`;}
+    if (daysLeft && daysLeft <= 7) {return `${formatted} (${daysLeft} days)`;}
     return formatted;
   };
 
   const deadlineColor = () => {
-    if (!daysLeft) return 'text-dark-muted';
-    if (daysLeft <= 0) return 'text-red-400';
-    if (daysLeft <= 3) return 'text-orange-400';
-    if (daysLeft <= 7) return 'text-yellow-400';
+    if (!daysLeft) {return 'text-dark-muted';}
+    if (daysLeft <= 0) {return 'text-red-400';}
+    if (daysLeft <= 3) {return 'text-orange-400';}
+    if (daysLeft <= 7) {return 'text-yellow-400';}
     return 'text-dark-muted';
   };
 

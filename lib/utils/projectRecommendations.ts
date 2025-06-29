@@ -28,7 +28,7 @@ export async function getRecommendedProjectsManual(userId: string) {
       .order('created_at', { ascending: false })
       .limit(50);
     
-    if (!projects) return [];
+    if (!projects) {return [];}
     
     // For each project, get required skills and calculate match
     const projectsWithSkills = await Promise.all(projects.map(async (project) => {

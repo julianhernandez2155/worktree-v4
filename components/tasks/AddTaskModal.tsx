@@ -1,9 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
 import { 
   X, 
   Plus,
@@ -12,8 +8,13 @@ import {
   Clock,
   Sparkles
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from 'react';
+
 import { TaskSkillRequirements } from '@/components/tasks/TaskSkillRequirements';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
 
 interface AddTaskModalProps {
   projectId: string;
@@ -34,7 +35,7 @@ export function AddTaskModal({ projectId, orgSlug, onClose, onTaskAdded }: AddTa
   const supabase = createClient();
 
   const handleCreate = async () => {
-    if (!taskName || !description) return;
+    if (!taskName || !description) {return;}
 
     try {
       setCreating(true);
@@ -55,7 +56,7 @@ export function AddTaskModal({ projectId, orgSlug, onClose, onTaskAdded }: AddTa
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       // Add required skills if any
       if (task && requiredSkills.length > 0) {

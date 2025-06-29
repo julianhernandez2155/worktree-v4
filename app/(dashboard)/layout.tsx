@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+
 import { PersistentLayout } from '@/components/navigation/PersistentLayout';
+import { createClient } from '@/lib/supabase/server';
 
 export default async function DashboardLayout({
   children,

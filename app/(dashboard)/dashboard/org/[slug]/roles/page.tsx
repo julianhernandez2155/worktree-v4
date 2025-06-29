@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+
 import { RoleHealthDashboard } from '@/components/roles/RoleHealthDashboard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 

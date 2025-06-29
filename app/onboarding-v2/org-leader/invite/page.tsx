@@ -1,10 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
 import { 
   Users,
   Mail,
@@ -18,6 +13,13 @@ import {
   Target,
   TrendingUp
 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
+
 
 export default function OrgInviteWizardPage() {
   const router = useRouter();
@@ -42,7 +44,7 @@ export default function OrgInviteWizardPage() {
   }, [orgId]);
 
   const fetchOrgDetails = async () => {
-    if (!orgId) return;
+    if (!orgId) {return;}
     
     const { data } = await supabase
       .from('organizations')
@@ -56,10 +58,10 @@ export default function OrgInviteWizardPage() {
   };
 
   const generateInviteLink = async () => {
-    if (!orgId) return;
+    if (!orgId) {return;}
     
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {return;}
 
     // Generate a unique invite code
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -88,14 +90,14 @@ export default function OrgInviteWizardPage() {
   };
 
   const handleSendEmails = async () => {
-    if (!emails.trim()) return;
+    if (!emails.trim()) {return;}
     
     setLoading(true);
     const emailList = emails.split(/[,\n]/).map(e => e.trim()).filter(e => e);
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
+      if (!user) {throw new Error('No user found');}
 
       // Create invitation records for each email
       const invitations = emailList.map(email => ({
@@ -121,7 +123,7 @@ export default function OrgInviteWizardPage() {
   const handleComplete = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
+      if (!user) {throw new Error('No user found');}
 
       // Update onboarding progress
       await supabase

@@ -1,11 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { StudentQuickStart, PrimaryRole } from '@/lib/types/onboarding';
 import { 
   User,
   Users,
@@ -13,6 +7,14 @@ import {
   ChevronRight,
   Check
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
+import { StudentQuickStart, PrimaryRole } from '@/lib/types/onboarding';
+
 
 export default function StudentOnboardingPage() {
   const router = useRouter();
@@ -64,7 +66,7 @@ export default function StudentOnboardingPage() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
+      if (!user) {throw new Error('No user found');}
 
       // Create basic user profile
       const { error: profileError } = await supabase
@@ -79,7 +81,7 @@ export default function StudentOnboardingPage() {
           onboarding_completed: false // Will be true after full flow
         });
 
-      if (profileError) throw profileError;
+      if (profileError) {throw profileError;}
 
       // Update onboarding progress
       const { error: progressError } = await supabase
@@ -93,7 +95,7 @@ export default function StudentOnboardingPage() {
         })
         .eq('user_id', user.id);
 
-      if (progressError) throw progressError;
+      if (progressError) {throw progressError;}
 
       // Navigate to organization selection
       router.push('/onboarding-v2/student/organizations');

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { GlassCard } from '@/components/ui/GlassCard';
 import { Mail, Lock, User, ArrowRight, Github } from 'lucide-react';
+import { useState } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
 
 type AuthMode = 'login' | 'signup';
 
@@ -58,7 +59,7 @@ export function AuthForm({ mode: initialMode = 'login', redirectTo = '/' }: Auth
           },
         });
 
-        if (signUpError) throw signUpError;
+        if (signUpError) {throw signUpError;}
         setSuccess(true);
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -66,7 +67,7 @@ export function AuthForm({ mode: initialMode = 'login', redirectTo = '/' }: Auth
           password,
         });
 
-        if (signInError) throw signInError;
+        if (signInError) {throw signInError;}
         // Check if user has profile
         const { data: profile } = await supabase
           .from('profiles')
@@ -142,7 +143,7 @@ export function AuthForm({ mode: initialMode = 'login', redirectTo = '/' }: Auth
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                if (emailError) validateEmail(e.target.value);
+                if (emailError) {validateEmail(e.target.value);}
               }}
               onBlur={(e) => validateEmail(e.target.value)}
               placeholder={mode === 'signup' ? 'you@university.edu' : 'you@example.com'}

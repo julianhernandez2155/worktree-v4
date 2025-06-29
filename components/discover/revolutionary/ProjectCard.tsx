@@ -1,27 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 import { 
-  Building, 
-  Calendar, 
-  Clock, 
+  Calendar,
+  Clock,
   MapPin,
   Bookmark,
-  Sparkles,
-  TrendingUp,
-  Users,
-  Zap,
-  Heart,
-  Share2,
-  ChevronRight
+  BookmarkCheck,
+  CheckCircle2,
+  ArrowRight,
+  Sparkles
 } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
-import { CountdownTimer } from './CountdownTimer';
-import { SkillBadge } from './SkillBadge';
-import { MatchIndicator } from './MatchIndicator';
-import { ActivityBadge } from './ActivityBadge';
 
 interface ProjectCardProps {
   project: any;
@@ -30,270 +25,222 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project, index, delay = 0 }: ProjectCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(project.is_saved || false);
   
-  // Calculate card size based on match score
-  const cardSize = project.match_score >= 80 ? 'large' : 
-                   project.match_score >= 60 ? 'medium' : 'small';
+  // Determine match level
+  const matchLevel = project.match_score >= 85 ? 'perfect' :
+                    project.match_score >= 70 ? 'great' :
+                    project.match_score >= 50 ? 'good' : 'fair';
   
-  const sizeClasses = {
-    large: 'md:col-span-2 md:row-span-2',
-    medium: 'md:col-span-1 md:row-span-2',
-    small: 'md:col-span-1 md:row-span-1'
+  const matchConfig = {
+    perfect: { label: 'Perfect Match', color: 'text-neon-green', bg: 'bg-neon-green/10', icon: Sparkles },
+    great: { label: 'Great Match', color: 'text-green-400', bg: 'bg-green-400/10' },
+    good: { label: 'Good Match', color: 'text-blue-400', bg: 'bg-blue-400/10' },
+    fair: { label: 'Fair Match', color: 'text-gray-400', bg: 'bg-gray-400/10' }
   };
 
+  const match = matchConfig[matchLevel];
+
+  // Calculate days until deadline
+  const daysUntilDeadline = project.application_deadline ? 
+    Math.ceil((new Date(project.application_deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
+  
+  const isUrgent = daysUntilDeadline !== null && daysUntilDeadline <= 7 && daysUntilDeadline >= 0;
+
+  // Convert hours to commitment level
+  const getCommitmentLevel = (hours?: number) => {
+    if (!hours) return null;
+    if (hours <= 5) return { label: 'Low commitment', color: 'text-green-400' };
+    if (hours <= 10) return { label: 'Medium commitment', color: 'text-yellow-400' };
+    if (hours <= 20) return { label: 'High commitment', color: 'text-orange-400' };
+    return { label: 'Intensive', color: 'text-red-400' };
+  };
+
+  const commitmentLevel = getCommitmentLevel(project.required_commitment_hours);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
+    <GlassCard
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9 }}
+      exit={{ opacity: 0, scale: 0.95 }}
       transition={{ 
-        duration: 0.5, 
+        duration: 0.3, 
         delay,
         type: "spring",
-        stiffness: 100
+        stiffness: 120
       }}
       whileHover={{ 
-        y: -8,
+        y: -2,
         transition: { duration: 0.2 }
       }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      className={cn(
-        "relative group cursor-pointer",
-        sizeClasses[cardSize]
-      )}
+      className="relative h-full flex flex-col cursor-pointer group"
+      hover
+      glow={matchLevel === 'perfect' ? 'green' : 'none'}
     >
-      {/* Background with gradient and pattern */}
-      <div className={cn(
-        "absolute inset-0 rounded-2xl opacity-20 transition-opacity group-hover:opacity-30",
-        `bg-gradient-to-br ${project.visual_theme?.gradient}`
-      )} />
-      
-      <div className={cn(
-        "relative h-full bg-dark-card/80 backdrop-blur-sm rounded-2xl",
-        "border border-dark-border hover:border-neon-green/50",
-        "transition-all duration-300 overflow-hidden"
-      )}>
-        {/* Animated border on hover */}
-        <motion.div
-          className="absolute inset-0 rounded-2xl"
-          initial={false}
-          animate={isHovered ? {
-            boxShadow: [
-              "0 0 0 0 rgba(0, 255, 136, 0)",
-              "0 0 20px 2px rgba(0, 255, 136, 0.3)",
-              "0 0 0 0 rgba(0, 255, 136, 0)"
-            ]
-          } : {}}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        />
-
-        {/* Perfect Match Badge */}
-        {project.match_score >= 70 && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute top-4 right-4 z-10"
-          >
-            <div className="relative">
-              <motion.div
-                animate={{ 
-                  scale: [1, 1.2, 1],
-                  opacity: [0.5, 0.8, 0.5]
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute inset-0 bg-neon-green rounded-full blur-xl"
-              />
-              <div className="relative bg-neon-green text-dark-bg px-3 py-1.5 rounded-full font-bold text-xs flex items-center gap-1">
-                <Sparkles className="h-3.5 w-3.5" />
-                Perfect for you!
-              </div>
+      {/* Organization Header - Compact and Clickable */}
+      <div className="flex items-center gap-2 mb-3">
+        <Link
+          href={`/dashboard/org/${project.organization.slug || project.organization.name.toLowerCase().replace(/\s+/g, '-')}/profile`}
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity flex-1 min-w-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {project.organization.logo_url ? (
+            <Image
+              src={project.organization.logo_url}
+              alt={project.organization.name}
+              width={24}
+              height={24}
+              className="rounded flex-shrink-0"
+            />
+          ) : (
+            <div className="w-6 h-6 bg-gradient-to-br from-gray-600 to-gray-700 rounded flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
+              {project.organization.name.charAt(0)}
             </div>
-          </motion.div>
+          )}
+          
+          <span className="text-xs text-gray-400 hover:text-white flex items-center gap-1 truncate transition-colors">
+            {project.organization.name}
+            {project.organization.verified && (
+              <CheckCircle2 className="h-3 w-3 text-blue-400 flex-shrink-0" />
+            )}
+          </span>
+        </Link>
+
+        {/* Bookmark button - top right */}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsBookmarked(!isBookmarked);
+          }}
+          className="ml-auto"
+        >
+          {isBookmarked ? (
+            <BookmarkCheck className="h-4 w-4 text-neon-green fill-current" />
+          ) : (
+            <Bookmark className="h-4 w-4 text-gray-500 hover:text-white transition-colors" />
+          )}
+        </motion.button>
+      </div>
+
+      {/* Project Title - Extra large and prominent */}
+      <h3 className="text-xl font-bold text-white mb-3 line-clamp-2">
+        {project.name}
+      </h3>
+
+      {/* Description - Clear and concise */}
+      <p className="text-sm text-gray-300 mb-4 line-clamp-3 flex-1">
+        {project.public_description || project.description}
+      </p>
+
+      {/* Skills Section - Reorganized */}
+      <div className="space-y-3 mb-4">
+        {/* Skills Needed */}
+        {((project.required_skills && project.required_skills.length > 0) || 
+          (project.preferred_skills && project.preferred_skills.length > 0)) && (
+          <div>
+            <p className="text-[11px] font-medium text-gray-500 mb-1.5 uppercase tracking-wider">
+              Skills Needed
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {/* Show matched required skills first in green */}
+              {project.matched_skills && project.matched_skills.slice(0, 2).map((skill: string) => (
+                <span 
+                  key={skill}
+                  className="px-2 py-0.5 bg-neon-green/10 text-neon-green text-xs rounded-full border border-neon-green/20"
+                >
+                  {skill} ✓
+                </span>
+              ))}
+              {/* Show missing required skills in gray */}
+              {project.missing_skills && project.missing_skills.slice(0, 2).map((skill: string) => (
+                <span 
+                  key={skill}
+                  className="px-2 py-0.5 bg-gray-700/50 text-gray-400 text-xs rounded-full border border-gray-600/30"
+                >
+                  {skill}
+                </span>
+              ))}
+              {/* Show count if more skills */}
+              {((project.matched_skills?.length || 0) + (project.missing_skills?.length || 0)) > 4 && (
+                <span className="px-2 py-0.5 bg-dark-surface text-gray-400 text-xs rounded-full">
+                  +{(project.matched_skills?.length || 0) + (project.missing_skills?.length || 0) - 4}
+                </span>
+              )}
+            </div>
+          </div>
         )}
 
-        {/* Content */}
-        <div className="p-6 h-full flex flex-col">
-          {/* Organization Header */}
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <motion.div
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.5 }}
-              >
-                {project.organization.logo_url ? (
-                  <Image
-                    src={project.organization.logo_url}
-                    alt={project.organization.name}
-                    width={40}
-                    height={40}
-                    className="rounded-xl"
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-dark-bg rounded-xl flex items-center justify-center">
-                    <Building className="h-5 w-5 text-dark-muted" />
-                  </div>
-                )}
-              </motion.div>
-              
-              <div>
-                <p className="text-sm text-dark-muted">{project.organization.name}</p>
-                {project.organization.verified && (
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full" />
-                    <span className="text-xs text-blue-400">Verified</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsLiked(!isLiked);
-                }}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-              >
-                <Heart className={cn(
-                  "h-4 w-4",
-                  isLiked ? "fill-red-500 text-red-500" : "text-white"
-                )} />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-              >
-                <Share2 className="h-4 w-4 text-white" />
-              </motion.button>
-            </div>
-          </div>
-
-          {/* Project Title */}
-          <h3 className="font-semibold text-white text-base mb-3 line-clamp-2 flex-grow">
-            {project.name}
-          </h3>
-
-          {/* Activity Badge */}
-          {project.recent_activity && (
-            <ActivityBadge activity={project.recent_activity} />
-          )}
-
-          {/* Match Indicator */}
-          <MatchIndicator score={project.match_score || 0} />
-
-          {/* Key Info with Icons */}
-          <div className="space-y-2 my-4 text-sm">
-            {project.application_deadline && (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-dark-muted">
-                  <Calendar className="h-4 w-4" />
-                  <span>Deadline</span>
-                </div>
-                <CountdownTimer deadline={project.application_deadline} />
-              </div>
-            )}
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-dark-muted">
-                <Clock className="h-4 w-4" />
-                <span>Commitment</span>
-              </div>
-              <span className="text-white">{project.required_commitment_hours || '10-15'}h/week</span>
-            </div>
-
-            {project.is_remote && (
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-green-400" />
-                <span className="text-green-400 text-xs">Remote friendly</span>
-              </div>
-            )}
-          </div>
-
-          {/* Skills Section */}
-          <div className="mb-4">
-            <p className="text-xs text-dark-muted mb-2">Skills you'll develop</p>
-            <div className="flex flex-wrap gap-1">
-              {project.skills_to_develop?.slice(0, 3).map((skill: string, idx: number) => (
-                <SkillBadge 
-                  key={idx} 
-                  skill={skill} 
-                  isNew={true}
-                  delay={idx * 0.1}
-                />
+        {/* Skill Growth Opportunities - Placeholder for AI-generated skills */}
+        {project.skills_to_develop && project.skills_to_develop.length > 0 && (
+          <div>
+            <p className="text-[11px] font-medium text-gray-500 mb-1.5 uppercase tracking-wider">
+              Skill Growth Opportunities
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {project.skills_to_develop.slice(0, 3).map((skill: string) => (
+                <span 
+                  key={skill}
+                  className="px-2 py-0.5 bg-purple-500/10 text-purple-400 text-xs rounded-full border border-purple-500/20"
+                >
+                  {skill}
+                </span>
               ))}
-              {project.skills_to_develop?.length > 3 && (
-                <span className="text-xs text-dark-muted px-2 py-1">
+              {project.skills_to_develop.length > 3 && (
+                <span className="px-2 py-0.5 bg-dark-surface text-gray-400 text-xs rounded-full">
                   +{project.skills_to_develop.length - 3}
                 </span>
               )}
             </div>
           </div>
+        )}
+      </div>
 
-          {/* AI Recommendation */}
-          {project.ai_reason && (
-            <div className="p-3 bg-dark-bg/50 rounded-lg mb-4">
-              <div className="flex items-start gap-2">
-                <Zap className="h-4 w-4 text-neon-green flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-dark-text">
-                  {project.ai_reason}
-                </p>
-              </div>
-            </div>
+      {/* Bottom Action Row */}
+      <div className="flex items-center justify-between mt-auto pt-3 border-t border-dark-border">
+        {/* Match Badge */}
+        <span className={cn(
+          "px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1",
+          match.bg, match.color
+        )}>
+          {match.icon && <match.icon className="h-3 w-3" />}
+          {match.label}
+        </span>
+
+        {/* Time & Location */}
+        <div className="flex items-center gap-3 text-xs">
+          {commitmentLevel && (
+            <span className={cn("flex items-center gap-1", commitmentLevel.color)}>
+              <Clock className="h-3 w-3" />
+              {commitmentLevel.label}
+            </span>
           )}
-
-          {/* Similar Students */}
-          {project.similar_students && (
-            <div className="flex items-center justify-between">
-              <div className="flex -space-x-2">
-                {project.similar_students.slice(0, 3).map((student: any, idx: number) => (
-                  <motion.div
-                    key={student.id}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: delay + idx * 0.1 }}
-                    className="w-6 h-6 bg-gradient-to-br from-purple-500 to-blue-500 
-                             rounded-full border-2 border-dark-card"
-                  />
-                ))}
-                <div className="w-6 h-6 bg-dark-bg rounded-full border-2 border-dark-card
-                         flex items-center justify-center">
-                  <span className="text-xs text-dark-muted">+{project.application_count}</span>
-                </div>
-              </div>
-              
-              <motion.button
-                whileHover={{ x: 5 }}
-                className="text-neon-green text-sm flex items-center gap-1"
-              >
-                View Details
-                <ChevronRight className="h-4 w-4" />
-              </motion.button>
-            </div>
+          
+          {isUrgent && (
+            <span className="flex items-center gap-1 text-orange-400">
+              <Calendar className="h-3 w-3" />
+              {daysUntilDeadline}d left
+            </span>
+          )}
+          
+          {project.is_remote && (
+            <span className="flex items-center gap-1 text-gray-400">
+              <MapPin className="h-3 w-3" />
+              Remote
+            </span>
           )}
         </div>
 
-        {/* Trending Indicator */}
-        {project.trending_score > 80 && (
-          <motion.div
-            initial={{ x: -100 }}
-            animate={{ x: 0 }}
-            className="absolute top-0 left-0 bg-gradient-to-r from-orange-500 to-red-500 
-                     text-white text-xs px-3 py-1 rounded-br-xl rounded-tl-xl"
-          >
-            <div className="flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
-              Trending
-            </div>
-          </motion.div>
-        )}
+        {/* Apply hint on hover */}
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <ArrowRight className="h-4 w-4 text-white" />
+        </motion.div>
       </div>
-    </motion.div>
+    </GlassCard>
   );
 }

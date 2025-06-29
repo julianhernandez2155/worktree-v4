@@ -1,17 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { OrgSwitcher } from './OrgSwitcher';
-import { CommandPalette } from '@/components/ui/CommandPalette';
 import { 
   Bell, 
   Settings, 
   Search,
   Menu
 } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+import { CommandPalette } from '@/components/ui/CommandPalette';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+
+import { OrgSwitcher } from './OrgSwitcher';
 
 interface Organization {
   id: string;
@@ -53,7 +55,7 @@ export function OrgLayout({ children }: { children: React.ReactNode }) {
   const loadUserOrganizations = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {return;}
 
       // Get user's organizations with their role
       const { data, error } = await supabase
@@ -69,7 +71,7 @@ export function OrgLayout({ children }: { children: React.ReactNode }) {
         `)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       const orgs = data?.map(item => {
         const org = item.organization as any;

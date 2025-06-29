@@ -1,11 +1,13 @@
 'use client';
 
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { DifficultyBadge, DifficultyIndicator } from '@/components/ui/DifficultyBadge';
-import { MatchQualityIndicator, MatchScoreDisplay } from '@/components/ui/MatchQualityIndicator';
 import { ArrowRight, Sparkles, Code, Users, LogIn } from 'lucide-react';
 import Link from 'next/link';
+
+import { DifficultyBadge, DifficultyIndicator } from '@/components/ui/DifficultyBadge';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { MatchQualityIndicator, MatchScoreDisplay } from '@/components/ui/MatchQualityIndicator';
+import { NeonButton } from '@/components/ui/NeonButton';
+
 
 export default function Home() {
   return (

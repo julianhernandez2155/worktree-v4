@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+
 import { ProjectDetail } from '@/components/projects/ProjectDetail';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 interface ProjectDetailPageProps {
   params: Promise<{ slug: string; projectId: string }>;

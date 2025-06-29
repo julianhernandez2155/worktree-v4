@@ -1,8 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { motion } from 'framer-motion';
 import { 
   User, 
   Mail, 
@@ -14,8 +12,12 @@ import {
   UserPlus,
   MoreVertical
 } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+
 
 interface MemberCardProps {
   member: {
@@ -66,8 +68,8 @@ export function MemberCard({ member, viewMode, orgSlug }: MemberCardProps) {
     const diffTime = Math.abs(now.getTime() - joinDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays < 30) return `${diffDays} days ago`;
-    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+    if (diffDays < 30) {return `${diffDays} days ago`;}
+    if (diffDays < 365) {return `${Math.floor(diffDays / 30)} months ago`;}
     return `${Math.floor(diffDays / 365)} years ago`;
   };
 

@@ -1,8 +1,3 @@
-import { Suspense } from 'react';
-import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import { MemberSkills } from '@/components/members/MemberSkills';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { 
   ArrowLeft, 
   Mail, 
@@ -13,6 +8,13 @@ import {
   Activity
 } from 'lucide-react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+
+import { MemberSkills } from '@/components/members/MemberSkills';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { createClient } from '@/lib/supabase/server';
+
 
 async function getMemberData(userId: string, orgSlug: string) {
   const supabase = await createClient();
@@ -27,7 +29,7 @@ async function getMemberData(userId: string, orgSlug: string) {
     .eq('slug', orgSlug)
     .single();
     
-  if (!org) return null;
+  if (!org) {return null;}
   
   // Get member details
   const { data: member, error: memberError } = await supabase
@@ -57,7 +59,7 @@ async function getMemberData(userId: string, orgSlug: string) {
     return null;
   }
     
-  if (!member) return null;
+  if (!member) {return null;}
   
   // Get member's completed tasks count
   const { count: completedTasks } = await supabase

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, ReactNode } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
+import { useState, useRef, ReactNode } from 'react';
 
 interface PullToRefreshProps {
   onRefresh: () => Promise<void>;
@@ -26,7 +26,7 @@ export function PullToRefresh({ onRefresh, refreshing, children }: PullToRefresh
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!pulling || refreshing) return;
+    if (!pulling || refreshing) {return;}
     
     const currentY = e.touches[0].clientY;
     const distance = Math.max(0, currentY - startY.current);

@@ -1,8 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, usePathname, useParams } from 'next/navigation';
-import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -17,18 +15,21 @@ import {
   LogOut,
   X,
   Compass,
-  TrendingUp,
+  Grid3x3,
   Bookmark,
-  Clock,
-  Globe,
   Briefcase,
   Award,
   FileText,
-  Building
+  Building,
+  Globe
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import { useRouter, usePathname, useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
 import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
+
 
 interface Organization {
   id: string;
@@ -52,16 +53,15 @@ const orgNavigation = [
   { name: 'Projects', href: '/projects', icon: FolderOpen },
   { name: 'Roles', href: '/roles', icon: UserCheck },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Org Profile', href: '/profile', icon: Globe },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
 const discoverNavigation = [
   { name: 'For You', href: '/discover', icon: Compass },
-  { name: 'Trending', href: '/discover/trending', icon: TrendingUp },
+  { name: 'All Projects', href: '/discover/all-projects', icon: Grid3x3 },
   { name: 'Saved', href: '/discover/saved', icon: Bookmark },
   { name: 'Applied', href: '/discover/applied', icon: CheckSquare },
-  { name: 'Closing Soon', href: '/discover/closing-soon', icon: Clock },
-  { name: 'Remote', href: '/discover/remote', icon: Globe },
 ];
 
 const portfolioNavigation = [
@@ -105,7 +105,7 @@ export function ContextSidebar({ collapsed, onToggle, isMobile = false }: Contex
   const loadUserOrganizations = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {return;}
 
       // Get user's organizations with their role
       const { data, error } = await supabase
@@ -121,7 +121,7 @@ export function ContextSidebar({ collapsed, onToggle, isMobile = false }: Contex
         `)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       const orgs = data?.map(item => {
         const org = item.organization as any;
@@ -186,34 +186,27 @@ export function ContextSidebar({ collapsed, onToggle, isMobile = false }: Contex
       'h-screen bg-dark-surface border-r border-dark-border flex flex-col transition-all duration-300',
       collapsed && !isMobile ? 'w-20' : 'w-72'
     )}>
-      {/* Header */}
+      {/* Header - Simplified without branding */}
       <div className="p-4 border-b border-dark-border">
         <div className="flex items-center justify-between">
           <AnimatePresence mode="wait">
-            {!collapsed || isMobile ? (
-              <motion.h1
+            {(!collapsed || isMobile) && (
+              <motion.h3
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="text-xl font-bold bg-gradient-to-r from-neon-green to-neon-blue bg-clip-text text-transparent"
+                className="text-sm font-semibold text-gray-400 uppercase tracking-wider"
               >
-                Worktree
-              </motion.h1>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="w-10 h-10 bg-gradient-to-br from-neon-green to-neon-blue rounded-lg flex items-center justify-center"
-              >
-                <span className="text-dark-bg font-bold">W</span>
-              </motion.div>
+                {pathname.includes('/dashboard/org/') ? 'Organization' : 
+                 pathname.startsWith('/discover') ? 'Discover' :
+                 pathname.startsWith('/portfolio') ? 'Portfolio' : 'Menu'}
+              </motion.h3>
             )}
           </AnimatePresence>
           
           <button
             onClick={onToggle}
-            className="p-1.5 hover:bg-dark-card rounded-lg transition-colors"
+            className="p-1.5 hover:bg-dark-card rounded-lg transition-colors ml-auto"
           >
             {isMobile ? (
               <X className="w-5 h-5" />

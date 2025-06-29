@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Skill } from '@/types/skills';
 import { X, Search, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+import { Skill } from '@/types/skills';
 
 interface SkillSelectorProps {
   selectedSkills: string[];
@@ -82,7 +83,7 @@ export function SkillSelector({
         .order('category')
         .order('name');
 
-      if (error) throw error;
+      if (error) {throw error;}
       setSkills(data || []);
     } catch (error) {
       console.error('Error loading skills:', error);

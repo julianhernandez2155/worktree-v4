@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { Search } from 'lucide-react';
-import { ProjectCard } from './ProjectCard';
+import { useState } from 'react';
+
 import { Project } from './DiscoverPage';
+import { ProjectCard } from './ProjectCard';
 
 interface ProjectListProps {
   projects: Project[];

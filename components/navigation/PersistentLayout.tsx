@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TopNavBar } from './TopNavBar';
-import { ContextSidebar } from './ContextSidebar';
+
 import { CommandPalette } from '@/components/ui/CommandPalette';
 import { cn } from '@/lib/utils';
+
+import { ContextSidebar } from './ContextSidebar';
+import { TopNavBar } from './TopNavBar';
 
 interface PersistentLayoutProps {
   children: React.ReactNode;

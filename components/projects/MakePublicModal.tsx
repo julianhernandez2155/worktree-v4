@@ -1,8 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
 import { 
   X, 
   Globe, 
@@ -14,6 +11,10 @@ import {
   FileText,
   CheckCircle
 } from 'lucide-react';
+import { useState } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
 import { cn } from '@/lib/utils';
 
 interface MakePublicModalProps {

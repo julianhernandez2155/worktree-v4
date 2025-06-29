@@ -1,11 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
-import { QuickProject } from '@/lib/types/onboarding';
 import { 
   Rocket,
   Calendar,
@@ -19,6 +13,14 @@ import {
   Plus,
   X
 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { createClient } from '@/lib/supabase/client';
+import { QuickProject } from '@/lib/types/onboarding';
+
 
 export default function OrgProjectSetupPage() {
   const router = useRouter();
@@ -78,13 +80,13 @@ export default function OrgProjectSetupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orgId) return;
+    if (!orgId) {return;}
     
     setLoading(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
+      if (!user) {throw new Error('No user found');}
 
       // Create the internal project
       const { data: project, error: projectError } = await supabase
@@ -99,7 +101,7 @@ export default function OrgProjectSetupPage() {
         .select()
         .single();
 
-      if (projectError) throw projectError;
+      if (projectError) {throw projectError;}
 
       // Track skill needs for the organization
       for (const skillName of formData.topNeeds) {

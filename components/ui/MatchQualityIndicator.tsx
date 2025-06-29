@@ -1,8 +1,9 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Sparkles, Zap, TrendingUp, Target, Rocket } from 'lucide-react';
+
+import { cn } from '@/lib/utils';
 
 export type MatchQuality = 'perfect' | 'strong' | 'good' | 'stretch' | 'reach';
 

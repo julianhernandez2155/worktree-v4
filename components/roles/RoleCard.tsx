@@ -1,7 +1,6 @@
 'use client';
 
-import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
   Calendar,
@@ -12,8 +11,11 @@ import {
   ChevronRight,
   Users
 } from 'lucide-react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { NeonButton } from '@/components/ui/NeonButton';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+
 
 interface RoleCardProps {
   role: {
@@ -66,7 +68,7 @@ export function RoleCard({ role, status, candidates, onClick }: RoleCardProps) {
   };
 
   const getStatusText = () => {
-    if (status === 'vacant') return 'Vacant';
+    if (status === 'vacant') {return 'Vacant';}
     if (status === 'at-risk' && role.term_end_date) {
       const endDate = new Date(role.term_end_date);
       const monthsLeft = Math.ceil((endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30));
