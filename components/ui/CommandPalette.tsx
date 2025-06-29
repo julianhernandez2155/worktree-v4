@@ -38,7 +38,7 @@ export function CommandPalette({ open, onOpenChange, currentOrg }: CommandPalett
   const [search, setSearch] = useState('');
   const [members, setMembers] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
 
   // Load data when palette opens
   useEffect(() => {

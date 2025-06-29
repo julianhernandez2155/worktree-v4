@@ -55,7 +55,7 @@ export function ApplicationReviewModal({
   onStatusUpdate 
 }: ApplicationReviewModalProps) {
   const [isUpdating, setIsUpdating] = useState(false);
-  const [reviewNotes, setReviewNotes] = useState('');
+  const [_reviewNotes, _setReviewNotes] = useState('');
 
   const handleStatusUpdate = async (newStatus: string) => {
     setIsUpdating(true);

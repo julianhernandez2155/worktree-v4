@@ -94,7 +94,7 @@ export function OrgDashboard({ orgSlug }: OrgDashboardProps) {
 
       // Calculate stats
       const totalMembers = memberData?.length || 0;
-      const activeMembers = memberData?.filter(m => {
+      const activeMembers = memberData?.filter(_m => {
         // Members who have contributions in the last 30 days
         return true; // TODO: Implement actual activity check
       }).length || 0;

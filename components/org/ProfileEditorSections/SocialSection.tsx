@@ -7,7 +7,7 @@ import {
   Twitter, 
   Linkedin, 
   MessageCircle,
-  Link as LinkIcon
+  Link as _LinkIcon
 } from 'lucide-react';
 
 interface SocialSectionProps {

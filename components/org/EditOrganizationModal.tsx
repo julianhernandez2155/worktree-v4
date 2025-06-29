@@ -403,7 +403,7 @@ export function EditOrganizationModal({
                   <h3 className="text-lg font-semibold text-white">Social Media</h3>
                   
                   <div className="space-y-2">
-                    {socialLinks.map((link, index) => (
+                    {socialLinks.map((_link, index) => (
                       <div key={index} className="flex gap-2">
                         <select
                           {...register(`social_links.${index}.platform` as const)}

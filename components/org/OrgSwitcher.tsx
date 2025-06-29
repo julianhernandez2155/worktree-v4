@@ -58,7 +58,7 @@ export function OrgSwitcher({
   isMobile = false 
 }: OrgSwitcherProps) {
   const router = useRouter();
-  const [showCreateOrg, setShowCreateOrg] = useState(false);
+  const [_showCreateOrg, setShowCreateOrg] = useState(false);
 
   const handleOrgSwitch = (org: Organization) => {
     router.push(`/dashboard/org/${org.slug}`);

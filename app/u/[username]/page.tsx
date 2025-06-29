@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function UserProfilePage({ params, searchParams }: PageProps) {
   const { username } = await params;
-  const search = await searchParams;
+  const _search = await searchParams;
   // const activeTab = (search.tab as 'overview' | 'experience' | 'skills' | 'portfolio') || 'overview';
   const supabase = await createClient();
   

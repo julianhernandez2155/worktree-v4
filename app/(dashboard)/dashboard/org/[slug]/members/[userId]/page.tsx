@@ -101,6 +101,10 @@ export default async function MemberProfilePage({
   const { member, isOwnProfile, completedTasks, projects } = data;
   const profile = Array.isArray(member.profiles) ? member.profiles[0] : member.profiles;
   
+  if (!profile) {
+    notFound();
+  }
+  
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Back Button */}

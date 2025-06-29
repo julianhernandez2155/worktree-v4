@@ -116,7 +116,7 @@ export function DifficultyIndicator({ level, className }: DifficultyIndicatorPro
   return (
     <div className={cn('flex items-center gap-1', className)}>
       {levels.map((l, index) => {
-        const config = difficultyConfig[l];
+        const _config = difficultyConfig[l];
         const isActive = index <= currentIndex;
         
         return (

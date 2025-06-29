@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Award, ExternalLink, Eye, Star, GitBranch } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
+import _Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
 

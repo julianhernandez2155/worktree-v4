@@ -72,7 +72,7 @@ interface TaskDetailModalProps {
 export function TaskDetailModal({ taskId, onClose, onUpdate }: TaskDetailModalProps) {
   const [task, setTask] = useState<Task | null>(null);
   const [project, setProject] = useState<any>(null);
-  const [assignee, setAssignee] = useState<any>(null);
+  const [_assignee, setAssignee] = useState<any>(null);
   const [assignees, setAssignees] = useState<Assignee[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);

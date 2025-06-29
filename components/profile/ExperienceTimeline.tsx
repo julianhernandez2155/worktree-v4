@@ -89,7 +89,7 @@ export function ExperienceTimeline({ contributions, organizations }: ExperienceT
               {/* Timeline line */}
               <div className="absolute left-9 top-0 bottom-0 w-0.5 bg-dark-border" />
 
-              {sortedMonths.map((monthData, monthIndex) => (
+              {sortedMonths.map((monthData, _monthIndex) => (
                 <div key={monthData.month} className="mb-8">
                   {/* Month header */}
                   <div className="flex items-center gap-3 mb-4">

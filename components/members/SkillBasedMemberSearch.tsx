@@ -49,7 +49,7 @@ export function SkillBasedMemberSearch({
       const { data, error } = await supabase
         .from('organization_members')
         .select(`
-          user:profiles!user_id(
+          profiles!organization_members_user_id_fkey(
             id,
             full_name,
             username,
@@ -58,10 +58,12 @@ export function SkillBasedMemberSearch({
           ),
           member_skills!inner(
             skill_id,
+            user_id,
+            added_at,
             source,
             verified_at,
             endorsed_by_count,
-            skill:skills(
+            skills!member_skills_skill_id_fkey(
               id,
               name,
               category
@@ -74,12 +76,15 @@ export function SkillBasedMemberSearch({
 
       // Transform data to MemberWithSkills format
       const members: MemberWithSkills[] = data?.map(member => ({
-        id: member.user.id,
-        full_name: member.user.full_name,
-        username: member.user.username,
-        avatar_url: member.user.avatar_url,
-        email: member.user.email,
-        skills: member.member_skills || []
+        id: member.profiles.id,
+        full_name: member.profiles.full_name,
+        username: member.profiles.username,
+        avatar_url: member.profiles.avatar_url,
+        email: member.profiles.email,
+        skills: member.member_skills?.map((ms: any) => ({
+          ...ms,
+          skill: ms.skills
+        })) || []
       })) || [];
 
       setAllMembers(members);

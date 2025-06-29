@@ -56,7 +56,7 @@ export function RoleHealthDashboard({ orgSlug }: RoleHealthDashboardProps) {
   const [roles, setRoles] = useState<Role[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [_selectedRole, setSelectedRole] = useState<Role | null>(null);
   const supabase = createClient();
 
   useEffect(() => {

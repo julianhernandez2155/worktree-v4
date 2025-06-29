@@ -10,7 +10,7 @@ interface StorySectionProps {
 }
 
 export function StorySection({ form, onFieldFocus }: StorySectionProps) {
-  const { register, watch, setValue, formState: { errors } } = form;
+  const { register, watch, setValue, formState: { _errors } } = form;
   const values = watch('values') || [''];
   const [isGeneratingMission, setIsGeneratingMission] = useState(false);
 
@@ -106,7 +106,7 @@ export function StorySection({ form, onFieldFocus }: StorySectionProps) {
           What principles guide your organization? (Add up to 5)
         </p>
         <div className="space-y-2">
-          {values.map((value: string, index: number) => (
+          {values.map((_value: string, index: number) => (
             <div key={index} className="flex gap-2">
               <input
                 {...register(`values.${index}` as const)}

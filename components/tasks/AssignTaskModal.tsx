@@ -86,11 +86,14 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
         .select(`
           skill_id,
           importance,
-          skill:skills(id, name)
+          skills!task_required_skills_skill_id_fkey(id, name)
         `)
         .eq('task_id', taskId);
 
-      setTaskRequiredSkills(requiredSkillsData || []);
+      setTaskRequiredSkills(requiredSkillsData?.map(rs => ({
+        ...rs,
+        skill: rs.skills
+      })) || []);
 
       // Get existing assignees
       const { data: assigneesData } = await supabase
@@ -134,7 +137,7 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
         .from('member_skills')
         .select(`
           user_id,
-          skill:skills!skill_id(name)
+          skills!member_skills_skill_id_fkey(name)
         `)
         .in('user_id', memberIds);
 
@@ -143,8 +146,8 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
         if (!acc[ms.user_id]) {
           acc[ms.user_id] = [];
         }
-        if (ms.skill?.name) {
-          acc[ms.user_id].push(ms.skill.name);
+        if (ms.skills?.name) {
+          acc[ms.user_id].push(ms.skills.name);
         }
         return acc;
       }, {} as Record<string, string[]>) || {};

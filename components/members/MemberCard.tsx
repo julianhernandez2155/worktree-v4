@@ -126,7 +126,7 @@ export function MemberCard({ member, viewMode, orgSlug }: MemberCardProps) {
 
             {/* Skills preview */}
             <div className="hidden md:flex items-center gap-2">
-              {member.user.skills.slice(0, 3).map((skill, index) => (
+              {member.user.skills.slice(0, 3).map((skill, _index) => (
                 <span
                   key={skill}
                   className="px-3 py-1 bg-dark-surface rounded-full text-xs"

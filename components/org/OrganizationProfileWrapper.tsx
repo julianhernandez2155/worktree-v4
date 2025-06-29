@@ -21,8 +21,8 @@ interface OrganizationProfileWrapperProps {
 }
 
 export function OrganizationProfileWrapper({ initialData }: OrganizationProfileWrapperProps) {
-  const router = useRouter();
-  const [data, setData] = useState(initialData);
+  const _router = useRouter();
+  const [data, _setData] = useState(initialData);
 
   return (
     <OrganizationProfile

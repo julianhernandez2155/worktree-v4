@@ -24,7 +24,7 @@ export default function OrgInviteWizardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orgId = searchParams.get('org');
-  const projectId = searchParams.get('project');
+  const _projectId = searchParams.get('project');
   
   const [loading, setLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState('');

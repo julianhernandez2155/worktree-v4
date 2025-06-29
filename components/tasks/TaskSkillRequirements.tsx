@@ -27,7 +27,7 @@ export function TaskSkillRequirements({
   const [preferredSkills, setPreferredSkills] = useState<string[]>([]);
   const [taskSkills, setTaskSkills] = useState<TaskRequiredSkill[]>([]);
   const [allSkills, setAllSkills] = useState<Skill[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
 
   const supabase = createClient();
 
@@ -128,7 +128,7 @@ export function TaskSkillRequirements({
     setPreferredSkills(skills);
   };
 
-  const getSkillById = (skillId: string) => {
+  const _getSkillById = (skillId: string) => {
     return allSkills.find(s => s.id === skillId);
   };
 

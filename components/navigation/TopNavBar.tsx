@@ -30,7 +30,7 @@ interface TopNavBarProps {
 export function TopNavBar({ onMenuClick, onSearchClick, currentOrg }: TopNavBarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [hasNotifications, setHasNotifications] = useState(true);
+  const [hasNotifications, _setHasNotifications] = useState(true);
   const [organizations, setOrganizations] = useState<any[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);

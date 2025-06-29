@@ -276,7 +276,7 @@ export function ProfileEditor({ organization, previewData }: ProfileEditorProps)
         updated_at: new Date().toISOString()
       };
 
-      const { data: result, error: updateError } = await supabase
+      const { data: _result, error: updateError } = await supabase
         .from('organizations')
         .update(updateData)
         .eq('id', organization.id)

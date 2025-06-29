@@ -25,7 +25,7 @@ const COMMON_TIMES = ['5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:
 export function MeetingSection({ form, onFieldFocus }: MeetingSectionProps) {
   const { register, watch, setValue } = form;
   const meetingSchedule = watch('meeting_schedule') || {};
-  const location = watch('location');
+  const _location = watch('_location');
 
   // Initialize meeting schedule if empty
   useEffect(() => {
