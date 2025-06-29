@@ -2,15 +2,12 @@
 
 import { 
   Clock, 
-  Users, 
-  Calendar,
   Bookmark,
   BookmarkCheck,
   CheckCircle,
   XCircle,
   Eye,
   AlertCircle,
-  TrendingUp,
   Building,
   Sparkles,
   Target,

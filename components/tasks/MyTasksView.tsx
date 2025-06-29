@@ -7,7 +7,6 @@ import {
   AlertCircle,
   Flag,
   Filter,
-  TrendingUp,
   ChevronRight,
   ListChecks
 } from 'lucide-react';

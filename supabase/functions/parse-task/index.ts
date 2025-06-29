@@ -1,5 +1,4 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import OpenAI from 'https://esm.sh/openai@4';
 
 const corsHeaders = {
@@ -14,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { input, orgId, memberNames, timezone } = await req.json();
+    const { input, memberNames, timezone } = await req.json();
 
     if (!input || typeof input !== 'string') {
       throw new Error('Invalid input: must be a non-empty string');

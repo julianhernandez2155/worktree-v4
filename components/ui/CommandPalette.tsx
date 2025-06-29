@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Search,
   Users,
   FolderOpen,
   Plus,
@@ -26,7 +25,6 @@ import {
   CommandSeparator,
 } from '@/components/ui/command';
 import { createClient } from '@/lib/supabase/client';
-import { cn } from '@/lib/utils';
 
 interface CommandPaletteProps {
   open: boolean;

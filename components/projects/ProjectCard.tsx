@@ -35,7 +35,7 @@ interface ProjectCardProps {
   onUpdate: () => void;
 }
 
-export function ProjectCard({ project, orgSlug, onUpdate }: ProjectCardProps) {
+export function ProjectCard({ project, orgSlug }: ProjectCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const router = useRouter();
 

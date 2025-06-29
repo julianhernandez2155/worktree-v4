@@ -3,18 +3,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search,
-  Filter,
-  TrendingUp,
-  Clock,
-  MapPin,
-  Users,
   Zap
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 import { createClient } from '@/lib/supabase/client';
-import { cn } from '@/lib/utils';
 
 import { AmbientOrbs } from './revolutionary/AmbientOrbs';
 import { FilterPills } from './revolutionary/FilterPills';

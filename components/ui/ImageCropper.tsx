@@ -10,7 +10,6 @@ import {
   ZoomOut,
   Maximize2
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface ImageCropperProps {
   image: string;

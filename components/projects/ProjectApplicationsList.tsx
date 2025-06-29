@@ -18,7 +18,6 @@ import { useState, useEffect } from 'react';
 
 import { GlassCard } from '@/components/ui/GlassCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { NeonButton } from '@/components/ui/NeonButton';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 

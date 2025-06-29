@@ -23,7 +23,7 @@ interface AddTaskModalProps {
   onTaskAdded?: () => void;
 }
 
-export function AddTaskModal({ projectId, orgSlug, onClose, onTaskAdded }: AddTaskModalProps) {
+export function AddTaskModal({ projectId, onClose, onTaskAdded }: AddTaskModalProps) {
   const [taskName, setTaskName] = useState('');
   const [description, setDescription] = useState('');
   const [requiredSkills, setRequiredSkills] = useState<{ skillId: string; importance: 'required' | 'preferred' }[]>([]);

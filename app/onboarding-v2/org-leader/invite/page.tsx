@@ -5,7 +5,6 @@ import {
   Mail,
   Link2,
   MessageSquare,
-  QrCode,
   Copy,
   Check,
   ChevronRight,

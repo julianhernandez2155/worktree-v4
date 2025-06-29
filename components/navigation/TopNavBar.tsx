@@ -7,7 +7,6 @@ import {
   Menu,
   Compass,
   Building,
-  Briefcase,
   User,
   LogOut,
   Edit,

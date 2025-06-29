@@ -2,7 +2,6 @@
 
 import { UseFormReturn } from 'react-hook-form';
 import { 
-  Plus, 
   Trash2, 
   Instagram, 
   Twitter, 

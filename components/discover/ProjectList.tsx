@@ -1,7 +1,6 @@
 'use client';
 
 import { Search } from 'lucide-react';
-import { useState } from 'react';
 
 import { Project } from './DiscoverPage';
 import { ProjectCard } from './ProjectCard';

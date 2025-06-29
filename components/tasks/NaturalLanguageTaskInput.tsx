@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { useState, useCallback } from 'react';
 
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { NeonButton } from '@/components/ui/NeonButton';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';

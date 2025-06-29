@@ -5,7 +5,7 @@ import { resolve } from 'path';
 const rootDir = resolve(__dirname, '..');
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react()] as any,
   test: {
     environment: 'jsdom',
     globals: true,
@@ -21,11 +21,13 @@ export default defineConfig({
         '**/__mocks__/**',
         '.next/**',
       ],
-      threshold: {
-        statements: 80,
-        branches: 80,
-        functions: 80,
-        lines: 80,
+      thresholds: {
+        global: {
+          statements: 80,
+          branches: 80,
+          functions: 80,
+          lines: 80,
+        }
       },
     },
     // Performance optimizations

@@ -3,19 +3,16 @@
 import { 
   X, 
   Globe, 
-  Lock,
   AlertCircle,
   Users,
   Clock,
   Calendar,
-  FileText,
   CheckCircle
 } from 'lucide-react';
 import { useState } from 'react';
 
 import { GlassCard } from '@/components/ui/GlassCard';
 import { NeonButton } from '@/components/ui/NeonButton';
-import { cn } from '@/lib/utils';
 
 interface MakePublicModalProps {
   project: {

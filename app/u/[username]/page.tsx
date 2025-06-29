@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function UserProfilePage({ params, searchParams }: PageProps) {
   const { username } = await params;
   const search = await searchParams;
-  const activeTab = (search.tab as 'overview' | 'experience' | 'skills' | 'portfolio') || 'overview';
+  // const activeTab = (search.tab as 'overview' | 'experience' | 'skills' | 'portfolio') || 'overview';
   const supabase = await createClient();
   
   // Get current user if logged in
@@ -122,9 +122,9 @@ export default async function UserProfilePage({ params, searchParams }: PageProp
 
   // Calculate statistics
   const stats = {
-    projectsCompleted: contributions?.filter(c => c.completed_at).length || 0,
+    projectsCompleted: contributions?.filter((c: { completed_at: string | null }) => c.completed_at).length || 0,
     organizationsJoined: profile.organization_members?.length || 0,
-    skillsVerified: profile.member_skills?.filter(s => s.verified_at !== null).length || 0,
+    skillsVerified: profile.member_skills?.filter((s: { verified_at: string | null }) => s.verified_at !== null).length || 0,
     totalSkills: profile.member_skills?.length || 0,
     contributionHours: 0, // TODO: Calculate from contributions
   };
@@ -141,7 +141,19 @@ export default async function UserProfilePage({ params, searchParams }: PageProp
   // Transform member_skills to add computed properties
   const transformedProfile = {
     ...profile,
-    member_skills: profile.member_skills?.map((ms: any) => ({
+    member_skills: profile.member_skills?.map((ms: {
+      skill_id: string;
+      user_id: string;
+      added_at: string;
+      verified_at: string | null;
+      endorsed_by_count: number;
+      source: string;
+      skills: {
+        id: string;
+        name: string;
+        category: string;
+      }
+    }) => ({
       ...ms,
       verified: ms.verified_at !== null,
       endorsement_count: ms.endorsed_by_count || 0,

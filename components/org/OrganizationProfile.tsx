@@ -17,13 +17,12 @@ import {
   Sparkles,
   Instagram,
   Twitter,
-  Github,
   Linkedin,
   MessageCircle
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useState, useRef, forwardRef, useImperativeHandle } from 'react';
 
 import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
@@ -55,7 +54,6 @@ export const OrganizationProfile = forwardRef<any, OrganizationProfileProps>(({
   skillsList,
   leadershipTeam,
   recentActivities,
-  isMember,
   isAdmin,
   highlightedSection,
   activeTab: controlledActiveTab,

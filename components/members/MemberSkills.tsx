@@ -7,7 +7,7 @@ import { SkillSelector } from '@/components/skills/SkillSelector';
 import { NeonButton } from '@/components/ui/NeonButton';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
-import { MemberSkill, Skill } from '@/types/skills';
+import { MemberSkill } from '@/types/skills';
 
 interface MemberSkillsProps {
   userId: string;

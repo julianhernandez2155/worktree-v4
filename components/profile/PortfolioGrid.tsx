@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Award, Users, ExternalLink, Eye, Star, GitBranch } from 'lucide-react';
+import { Calendar, Clock, Award, ExternalLink, Eye, Star, GitBranch } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';

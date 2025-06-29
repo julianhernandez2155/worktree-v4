@@ -2,18 +2,14 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  User, 
-  Calendar,
   AlertCircle,
   CheckCircle,
   Target,
-  TrendingUp,
   ChevronRight,
   Users
 } from 'lucide-react';
 
 import { GlassCard } from '@/components/ui/GlassCard';
-import { NeonButton } from '@/components/ui/NeonButton';
 import { cn } from '@/lib/utils';
 
 

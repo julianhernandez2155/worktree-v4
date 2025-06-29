@@ -5,11 +5,8 @@ import {
   Plus,
   X,
   ChevronRight,
-  Target,
-  Briefcase,
-  TrendingUp
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import { GlassCard } from '@/components/ui/GlassCard';
 import { NeonButton } from '@/components/ui/NeonButton';

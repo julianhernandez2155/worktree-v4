@@ -39,7 +39,7 @@ async function getMemberData(userId: string, orgSlug: string) {
       user_id,
       role,
       joined_at,
-      user:profiles!user_id(
+      profiles!organization_members_user_id_fkey(
         id,
         full_name,
         username,
@@ -98,8 +98,8 @@ export default async function MemberProfilePage({
     notFound();
   }
   
-  const { member, org, isOwnProfile, completedTasks, projects } = data;
-  const profile = member.user;
+  const { member, isOwnProfile, completedTasks, projects } = data;
+  const profile = member.profiles;
   
   return (
     <div className="max-w-4xl mx-auto space-y-6">

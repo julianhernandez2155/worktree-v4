@@ -4,7 +4,6 @@ import {
   X, 
   User,
   Sparkles,
-  Clock,
   CheckCircle,
   AlertCircle,
   Search

@@ -4,8 +4,6 @@ import { motion } from 'framer-motion';
 import { 
   UserPlus,
   AlertTriangle,
-  Calendar,
-  TrendingUp,
   Users,
   Target,
   Sparkles

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Camera, Upload, X } from 'lucide-react';
+import { Camera } from 'lucide-react';
 import Image from 'next/image';
 import { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { ImageCropper } from '@/components/ui/ImageCropper';
@@ -19,7 +19,6 @@ interface MediaSectionProps {
 }
 
 export function MediaSection({ 
-  control, 
   setValue, 
   watch,
   onFieldFocus, 
@@ -73,7 +72,7 @@ export function MediaSection({
     const byteArray = new Uint8Array(byteNumbers);
     const blob = new Blob([byteArray], { type: 'image/png' });
 
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('avatars')
       .upload(path, blob, {
         contentType: 'image/png',

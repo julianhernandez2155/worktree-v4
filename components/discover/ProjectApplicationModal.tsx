@@ -4,9 +4,7 @@ import {
   X, 
   Clock, 
   Calendar, 
-  FileText,
   Link,
-  AlertCircle,
   CheckCircle,
   Sparkles,
   ChevronRight
@@ -17,7 +15,6 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { NeonButton } from '@/components/ui/NeonButton';
 import { createClient } from '@/lib/supabase/client';
-import { cn } from '@/lib/utils';
 
 interface ProjectApplicationModalProps {
   projectId: string;

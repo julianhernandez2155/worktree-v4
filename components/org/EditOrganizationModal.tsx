@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
   Save, 
-  Upload, 
   Globe, 
   Mail, 
   MapPin,
@@ -18,7 +17,7 @@ import {
   Trash2,
   AlertCircle
 } from 'lucide-react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { createClient } from '@/lib/supabase/client';
 import { GlassCard } from '@/components/ui/GlassCard';
 
@@ -72,7 +71,7 @@ export function EditOrganizationModal({
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
-  const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       name: organization.name || '',
       description: organization.description || '',

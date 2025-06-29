@@ -7,7 +7,7 @@ import { SkillSelector } from '@/components/skills/SkillSelector';
 import { NeonButton } from '@/components/ui/NeonButton';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
-import { MemberWithSkills, Skill } from '@/types/skills';
+import { MemberWithSkills } from '@/types/skills';
 
 interface SkillBasedMemberSearchProps {
   organizationId: string;

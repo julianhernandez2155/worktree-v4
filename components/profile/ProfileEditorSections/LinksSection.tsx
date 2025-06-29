@@ -19,8 +19,6 @@ const PLATFORM_OPTIONS = [
 ];
 
 export function LinksSection({ 
-  register, 
-  errors, 
   watch, 
   setValue, 
   onFieldFocus 

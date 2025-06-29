@@ -24,7 +24,7 @@ interface ProjectCardProps {
   delay?: number;
 }
 
-export function ProjectCard({ project, index, delay = 0 }: ProjectCardProps) {
+export function ProjectCard({ project, delay = 0 }: ProjectCardProps) {
   const [isBookmarked, setIsBookmarked] = useState(project.is_saved || false);
   
   // Determine match level

@@ -1,11 +1,10 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 import { createClient } from '@/lib/supabase/client';
-import { cn } from '@/lib/utils';
 
 import { AmbientOrbs } from './revolutionary/AmbientOrbs';
 import { FeaturedProject } from './revolutionary/FeaturedProject';

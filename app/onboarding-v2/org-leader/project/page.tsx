@@ -2,19 +2,15 @@
 
 import { 
   Rocket,
-  Calendar,
   Code,
   Palette,
   Megaphone,
   FileText,
-  Users,
-  TrendingUp,
   ChevronRight,
-  Plus,
   X
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import { GlassCard } from '@/components/ui/GlassCard';
 import { NeonButton } from '@/components/ui/NeonButton';

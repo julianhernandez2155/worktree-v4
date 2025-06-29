@@ -35,8 +35,6 @@ const ALL_SKILLS = [
 ];
 
 export function ExperienceSection({ 
-  register, 
-  errors, 
   watch, 
   setValue, 
   onFieldFocus,

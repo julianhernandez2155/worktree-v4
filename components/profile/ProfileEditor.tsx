@@ -113,7 +113,7 @@ export function ProfileEditor({ profile, previewData }: ProfileEditorProps) {
   const previewRef = useRef<any>(null);
   const supabase = createClient();
 
-  const { register, control, handleSubmit, formState: { errors }, watch, setValue, getValues } = useForm<FormData>({
+  const { register, control, formState: { errors }, watch, setValue, getValues } = useForm<FormData>({
     defaultValues: {
       full_name: profile?.full_name || '',
       username: profile?.username || '',

@@ -92,7 +92,19 @@ export default async function EditProfilePage() {
   // Transform member_skills to add computed properties
   const transformedProfile = {
     ...profile,
-    member_skills: profile.member_skills?.map((ms: any) => ({
+    member_skills: profile.member_skills?.map((ms: {
+      skill_id: string;
+      user_id: string;
+      added_at: string;
+      verified_at: string | null;
+      endorsed_by_count: number;
+      source: string;
+      skills: {
+        id: string;
+        name: string;
+        category: string;
+      }
+    }) => ({
       ...ms,
       verified: ms.verified_at !== null,
       endorsement_count: ms.endorsed_by_count || 0,
@@ -105,12 +117,12 @@ export default async function EditProfilePage() {
     stats: {
       projectsCompleted: contributions?.filter(c => c.completed_at).length || 0,
       organizationsJoined: profile.organization_members?.length || 0,
-      skillsVerified: profile.member_skills?.filter(s => s.verified_at !== null).length || 0,
+      skillsVerified: profile.member_skills?.filter((s: { verified_at: string | null }) => s.verified_at !== null).length || 0,
       totalSkills: profile.member_skills?.length || 0,
       contributionHours: 0, // TODO: Calculate from contributions
     },
     contributions: contributions || [],
-    recentActivity: contributions?.filter(c => c.completed_at).map(c => ({ 
+    recentActivity: contributions?.filter((c: { completed_at: string | null }) => c.completed_at).map((c: { completed_at: string | null }) => ({ 
       completed_at: c.completed_at 
     })) || []
   };

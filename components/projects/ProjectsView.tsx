@@ -3,7 +3,6 @@
 import { 
   Plus, 
   FolderOpen, 
-  Users, 
   Lock,
   Globe,
   TrendingUp,

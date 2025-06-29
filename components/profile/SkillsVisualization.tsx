@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Award, Shield, TrendingUp, Users, CheckCircle2, Plus, Star } from 'lucide-react';
+import { Award, Shield, TrendingUp, Users, CheckCircle2, Plus } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
 

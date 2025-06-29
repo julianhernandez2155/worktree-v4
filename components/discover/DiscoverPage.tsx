@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { createClient } from '@/lib/supabase/client';
-import { cn } from '@/lib/utils';
 
 import { ProjectDetail } from './ProjectDetail';
 import { ProjectList } from './ProjectList';
