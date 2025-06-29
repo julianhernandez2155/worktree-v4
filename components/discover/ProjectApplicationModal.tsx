@@ -85,7 +85,9 @@ export function ProjectApplicationModal({
       if (projectData?.preferred_start_date) {
         setFormData(prev => ({
           ...prev,
-          expectedStartDate: new Date(projectData.preferred_start_date).toISOString().split('T')[0]
+          expectedStartDate: projectData.preferred_start_date 
+            ? new Date(projectData.preferred_start_date).toISOString().split('T')[0]
+            : prev.expectedStartDate
         }));
       }
     } catch (error) {

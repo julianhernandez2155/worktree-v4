@@ -29,7 +29,7 @@ const relativePatterns: Array<{
     pattern: /^(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/i,
     handler: (match) => {
       const hasNext = !!match[1];
-      const day = match[2].toLowerCase();
+      const day = match[2]?.toLowerCase() || '';
       const today = new Date();
       const currentDay = today.getDay();
       const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -68,8 +68,8 @@ const relativePatterns: Array<{
   {
     pattern: /^in\s+(\d+)\s+(day|days|week|weeks|month|months)$/i,
     handler: (match) => {
-      const amount = parseInt(match[1]);
-      const unit = match[2].toLowerCase();
+      const amount = parseInt(match[1] || '0');
+      const unit = match[2]?.toLowerCase() || '';
       const today = new Date();
       
       if (unit.startsWith('day')) {return addDays(today, amount);}
@@ -85,7 +85,7 @@ const relativePatterns: Array<{
   {
     pattern: /^next\s+(week|month)$/i,
     handler: (match) => {
-      const unit = match[1].toLowerCase();
+      const unit = match[1]?.toLowerCase() || '';
       const today = new Date();
       
       if (unit === 'week') {return addWeeks(today, 1);}
@@ -100,7 +100,7 @@ const relativePatterns: Array<{
   {
     pattern: /^end\s+of\s+(the\s+)?(week|month)$/i,
     handler: (match) => {
-      const unit = match[2].toLowerCase();
+      const unit = match[2]?.toLowerCase() || '';
       const today = new Date();
       
       if (unit === 'week') {return endOfWeek(today, { weekStartsOn: 1 });} // Monday start
@@ -115,7 +115,7 @@ const relativePatterns: Array<{
   {
     pattern: /^this\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/i,
     handler: (match) => {
-      const day = match[1].toLowerCase();
+      const day = match[1]?.toLowerCase() || '';
       const today = new Date();
       const currentDay = today.getDay();
       const targetDay = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(day);
@@ -259,5 +259,5 @@ export function toISODateString(date: Date): string {
  */
 export function parseLocalISODate(dateString: string): Date {
   const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day);
+  return new Date(year || 0, (month || 1) - 1, day || 1);
 }

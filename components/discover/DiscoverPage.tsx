@@ -137,7 +137,7 @@ export function DiscoverPage() {
     
     // Select next project if this was selected
     if (selectedProject?.id === projectId && filteredProjects.length > 0) {
-      setSelectedProject(filteredProjects[0]);
+      setSelectedProject(filteredProjects[0] || null);
     } else if (filteredProjects.length === 0) {
       setSelectedProject(null);
     }
