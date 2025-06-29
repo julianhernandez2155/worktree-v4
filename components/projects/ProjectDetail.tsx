@@ -9,6 +9,8 @@ import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
 import { AssignTaskModal } from '@/components/tasks/AssignTaskModal';
 import { AddTaskModal } from '@/components/tasks/AddTaskModal';
 import { NaturalLanguageTaskInput } from '@/components/tasks/NaturalLanguageTaskInput';
+import { MakePublicModal } from '@/components/projects/MakePublicModal';
+import { ProjectApplicationsList } from '@/components/projects/ProjectApplicationsList';
 import { 
   ArrowLeft,
   Clock, 
@@ -25,7 +27,9 @@ import {
   ChevronRight,
   ListChecks,
   UserPlus,
-  Sparkles
+  Sparkles,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -64,7 +68,6 @@ interface Task {
     id: string;
     full_name: string;
     avatar_url?: string;
-    skills: string[];
   };
   estimated_hours?: number | null;
   hours_worked?: number | null;
@@ -81,6 +84,9 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
   const [showAddTask, setShowAddTask] = useState(false);
   const [showNLInput, setShowNLInput] = useState(false);
   const [memberNames, setMemberNames] = useState<string[]>([]);
+  const [updatingVisibility, setUpdatingVisibility] = useState(false);
+  const [showPublicModal, setShowPublicModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'tasks' | 'applications'>('tasks');
   const router = useRouter();
   const supabase = createClient();
 
@@ -111,8 +117,7 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
           contributor:profiles!contributor_id(
             id,
             full_name,
-            avatar_url,
-            skills
+            avatar_url
           )
         `)
         .eq('project_id', projectId)
@@ -133,8 +138,7 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
             id,
             full_name,
             username,
-            avatar_url,
-            skills
+            avatar_url
           )
         `)
         .in('task_id', taskIds)
@@ -144,13 +148,15 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
       // Group assignees by task
       const assigneesByTask = assigneesData?.reduce((acc: any, item) => {
         if (!acc[item.task_id]) acc[item.task_id] = [];
-        acc[item.task_id].push({
-          id: item.assignee.id,
-          full_name: item.assignee.full_name,
-          username: item.assignee.username,
-          avatar_url: item.assignee.avatar_url,
-          is_primary: item.is_primary
-        });
+        if (item.assignee) {
+          acc[item.task_id].push({
+            id: item.assignee.id,
+            full_name: item.assignee.full_name,
+            username: item.assignee.username,
+            avatar_url: item.assignee.avatar_url,
+            is_primary: item.is_primary
+          });
+        }
         return acc;
       }, {}) || {};
 
@@ -222,6 +228,45 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
     return { text: `${diffDays} days`, color: 'text-gray-400' };
   };
 
+  const handleVisibilityChange = async (data: any) => {
+    try {
+      setUpdatingVisibility(true);
+      
+      const updateData: any = {
+        is_public: !project.is_public,
+        updated_at: new Date().toISOString()
+      };
+
+      // If making public, add additional fields
+      if (!project.is_public) {
+        updateData.public_description = data.publicDescription;
+        updateData.required_commitment_hours = data.commitmentHours;
+        updateData.max_applicants = data.maxApplicants;
+        // Only set application_deadline if it's not empty
+        if (data.applicationDeadline && data.applicationDeadline.trim() !== '') {
+          updateData.application_deadline = data.applicationDeadline;
+        }
+        updateData.application_requirements = data.applicationRequirements;
+        updateData.published_at = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from('internal_projects')
+        .update(updateData)
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      // Reload project details
+      await loadProjectDetails();
+      setShowPublicModal(false);
+    } catch (error) {
+      console.error('Error updating project visibility:', error);
+    } finally {
+      setUpdatingVisibility(false);
+    }
+  };
+
   const taskStats = {
     total: tasks.length,
     assigned: tasks.filter(t => t.assignees && t.assignees.length > 0).length,
@@ -264,9 +309,19 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
           </div>
           <p className="text-dark-muted mt-1">{project.description}</p>
         </div>
-        <NeonButton variant="secondary" icon={<Edit className="h-4 w-4" />}>
-          Edit Project
-        </NeonButton>
+        <div className="flex items-center gap-2">
+          <NeonButton 
+            variant="secondary" 
+            icon={project.is_public ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            onClick={() => setShowPublicModal(true)}
+            disabled={updatingVisibility}
+          >
+            {project.is_public ? 'Make Private' : 'Make Public'}
+          </NeonButton>
+          <NeonButton variant="secondary" icon={<Edit className="h-4 w-4" />}>
+            Edit Project
+          </NeonButton>
+        </div>
       </div>
 
       {/* Stats */}
@@ -320,7 +375,41 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
         </GlassCard>
       </div>
 
+      {/* Tabs for Tasks and Applications */}
+      {project.is_public && (
+        <div className="flex gap-4 mb-6">
+          <button
+            onClick={() => setActiveTab('tasks')}
+            className={cn(
+              "px-4 py-2 rounded-lg font-medium transition-all",
+              activeTab === 'tasks'
+                ? "bg-dark-card text-white border border-neon-green/50"
+                : "text-dark-muted hover:text-white hover:bg-dark-card/50"
+            )}
+          >
+            Tasks
+          </button>
+          <button
+            onClick={() => setActiveTab('applications')}
+            className={cn(
+              "px-4 py-2 rounded-lg font-medium transition-all",
+              activeTab === 'applications'
+                ? "bg-dark-card text-white border border-neon-green/50"
+                : "text-dark-muted hover:text-white hover:bg-dark-card/50"
+            )}
+          >
+            Applications
+            {project.application_count > 0 && (
+              <span className="ml-2 px-2 py-0.5 bg-neon-green/20 text-neon-green rounded-full text-sm">
+                {project.application_count}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* Tasks List */}
+      {activeTab === 'tasks' && (
       <GlassCard>
         <div className="p-6 border-b border-dark-border">
           <div className="flex items-center justify-between">
@@ -516,6 +605,16 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
           </div>
         )}
       </GlassCard>
+      )}
+
+      {/* Applications List */}
+      {activeTab === 'applications' && project.is_public && (
+        <ProjectApplicationsList
+          projectId={projectId}
+          projectName={project.name}
+          maxApplicants={project.max_applicants}
+        />
+      )}
 
       {/* Task Detail Modal */}
       {selectedTask && (
@@ -544,6 +643,16 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
           orgSlug={orgSlug}
           onClose={() => setShowAddTask(false)}
           onTaskAdded={loadProjectDetails}
+        />
+      )}
+
+      {/* Make Public/Private Modal */}
+      {showPublicModal && (
+        <MakePublicModal
+          project={project}
+          isPublic={project.is_public}
+          onClose={() => setShowPublicModal(false)}
+          onConfirm={handleVisibilityChange}
         />
       )}
     </div>

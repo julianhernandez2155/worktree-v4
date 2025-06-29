@@ -20,7 +20,9 @@ import {
   Square,
   CheckSquare,
   Trash2,
-  Users
+  Users,
+  Check,
+  RotateCcw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TaskSkillRequirements } from '@/components/tasks/TaskSkillRequirements';
@@ -78,6 +80,9 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
   const [saving, setSaving] = useState(false);
   const [newSubtask, setNewSubtask] = useState('');
   const [addingSubtask, setAddingSubtask] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const supabase = createClient();
 
@@ -129,29 +134,42 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
         .select(`
           assignee_id,
           is_primary,
-          assigned_at,
-          assignee:profiles!assignee_id (
-            id,
-            full_name,
-            username,
-            avatar_url,
-            skills
-          )
+          assigned_at
         `)
         .eq('task_id', taskId)
         .order('is_primary', { ascending: false })
         .order('assigned_at');
+      
+      // Load assignee profiles separately if we have assignees
+      let assigneeProfiles: any = {};
+      if (assigneesData && assigneesData.length > 0) {
+        const assigneeIds = assigneesData.map(a => a.assignee_id);
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, avatar_url')
+          .in('id', assigneeIds);
+        
+        if (profilesData) {
+          assigneeProfiles = profilesData.reduce((acc: any, profile) => {
+            acc[profile.id] = profile;
+            return acc;
+          }, {});
+        }
+      }
 
       if (assigneesData) {
-        const formattedAssignees = assigneesData.map(a => ({
-          id: a.assignee.id,
-          full_name: a.assignee.full_name,
-          username: a.assignee.username,
-          avatar_url: a.assignee.avatar_url,
-          skills: a.assignee.skills || [],
-          is_primary: a.is_primary,
-          assigned_at: a.assigned_at
-        }));
+        const formattedAssignees = assigneesData.map(a => {
+          const profile = assigneeProfiles[a.assignee_id] || {};
+          return {
+            id: a.assignee_id,
+            full_name: profile.full_name || 'Unknown',
+            username: profile.username,
+            avatar_url: profile.avatar_url,
+            skills: [], // Skills are now in member_skills table
+            is_primary: a.is_primary,
+            assigned_at: a.assigned_at
+          };
+        });
         setAssignees(formattedAssignees);
       }
     } catch (error) {
@@ -264,6 +282,76 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
       setEditedTask({ ...editedTask, subtasks: updatedSubtasks });
     } catch (error) {
       console.error('Error deleting subtask:', error);
+    }
+  };
+
+  const handleCompleteTask = async () => {
+    if (!task) return;
+
+    try {
+      setCompleting(true);
+
+      const newStatus = task.status === 'completed' ? 'in_progress' : 'completed';
+      const updateData: any = { 
+        status: newStatus 
+      };
+
+      // If marking as completed, set completed_at
+      if (newStatus === 'completed') {
+        updateData.completed_at = new Date().toISOString();
+      } else {
+        updateData.completed_at = null;
+      }
+
+      const { error } = await supabase
+        .from('contributions')
+        .update(updateData)
+        .eq('id', task.id);
+
+      if (error) throw error;
+
+      await loadTaskDetails();
+      onUpdate?.();
+    } catch (error) {
+      console.error('Error updating task status:', error);
+    } finally {
+      setCompleting(false);
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!task) return;
+
+    try {
+      setDeleting(true);
+
+      // Delete task assignees first (due to foreign key)
+      await supabase
+        .from('task_assignees')
+        .delete()
+        .eq('task_id', task.id);
+
+      // Delete task required skills
+      await supabase
+        .from('task_required_skills')
+        .delete()
+        .eq('task_id', task.id);
+
+      // Delete the task
+      const { error } = await supabase
+        .from('contributions')
+        .delete()
+        .eq('id', task.id);
+
+      if (error) throw error;
+
+      onUpdate?.();
+      onClose();
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -609,9 +697,43 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
 
         {/* Footer */}
         <div className="flex items-center justify-between p-6 border-t border-dark-border">
-          <div className="text-sm text-dark-muted">
-            {task.assigned_at && (
-              <span>Assigned {new Date(task.assigned_at).toLocaleDateString()}</span>
+          <div className="flex items-center gap-3">
+            {/* Delete button on the left */}
+            {!editing && !showDeleteConfirm && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="px-4 py-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors flex items-center gap-2"
+                disabled={deleting}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </button>
+            )}
+            {showDeleteConfirm && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-red-400">Are you sure?</span>
+                <button
+                  onClick={handleDeleteTask}
+                  disabled={deleting}
+                  className="px-3 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors"
+                >
+                  {deleting ? 'Deleting...' : 'Yes, delete'}
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-3 py-1 text-dark-muted hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+            {/* Timestamp */}
+            {!showDeleteConfirm && (
+              <div className="text-sm text-dark-muted">
+                {task.assigned_at && (
+                  <span>Assigned {new Date(task.assigned_at).toLocaleDateString()}</span>
+                )}
+              </div>
             )}
           </div>
           <div className="flex items-center gap-3">
@@ -636,6 +758,18 @@ export function TaskDetailModal({ taskId, orgSlug, onClose, onUpdate }: TaskDeta
               </>
             ) : (
               <>
+                {/* Complete/Reopen button */}
+                <NeonButton
+                  onClick={handleCompleteTask}
+                  loading={completing}
+                  variant={task.status === 'completed' ? 'secondary' : 'primary'}
+                  icon={task.status === 'completed' ? 
+                    <RotateCcw className="h-4 w-4" /> : 
+                    <Check className="h-4 w-4" />
+                  }
+                >
+                  {task.status === 'completed' ? 'Reopen' : 'Complete'}
+                </NeonButton>
                 <button
                   onClick={onClose}
                   className="px-4 py-2 text-dark-muted hover:text-white transition-colors"

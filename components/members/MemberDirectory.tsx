@@ -74,7 +74,6 @@ export function MemberDirectory({ orgSlug }: MemberDirectoryProps) {
             id,
             full_name,
             avatar_url,
-            skills,
             year_of_study,
             major
           )
@@ -84,16 +83,37 @@ export function MemberDirectory({ orgSlug }: MemberDirectoryProps) {
 
       if (error) throw error;
 
+      // Now fetch skills for each member from member_skills table
+      const memberIds = memberData?.map(m => m.user.id) || [];
+      const { data: memberSkillsData } = await supabase
+        .from('member_skills')
+        .select(`
+          user_id,
+          skill:skills!skill_id(name)
+        `)
+        .in('user_id', memberIds);
+
+      // Create a map of user_id to skills array
+      const userSkillsMap = memberSkillsData?.reduce((acc, ms) => {
+        if (!acc[ms.user_id]) {
+          acc[ms.user_id] = [];
+        }
+        if (ms.skill?.name) {
+          acc[ms.user_id].push(ms.skill.name);
+        }
+        return acc;
+      }, {} as Record<string, string[]>) || {};
+
       // Map the data to the correct Member interface structure
       const formattedMembers: Member[] = (memberData || []).map(item => {
         // Handle the case where user might be null or undefined
         const userProfile = item.user as any;
+        const userId = userProfile?.id || '';
         return {
-          id: userProfile?.id || '',
-          user: userProfile || {
-            id: '',
-            full_name: '',
-            skills: [],
+          id: userId,
+          user: {
+            ...userProfile,
+            skills: userSkillsMap[userId] || []
           },
           role: item.role,
           joined_at: item.joined_at

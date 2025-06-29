@@ -20,10 +20,8 @@ export interface Database {
           bio: string | null
           year_of_study: string | null
           major: string | null
-          skills: string[]
           interests: string[]
           looking_for: string[]
-          skill_embeddings: number[] | null
           interest_embeddings: number[] | null
         }
         Insert: {
@@ -36,10 +34,8 @@ export interface Database {
           bio?: string | null
           year_of_study?: string | null
           major?: string | null
-          skills?: string[]
           interests?: string[]
           looking_for?: string[]
-          skill_embeddings?: number[] | null
           interest_embeddings?: number[] | null
         }
         Update: {
@@ -52,10 +48,8 @@ export interface Database {
           bio?: string | null
           year_of_study?: string | null
           major?: string | null
-          skills?: string[]
           interests?: string[]
           looking_for?: string[]
-          skill_embeddings?: number[] | null
           interest_embeddings?: number[] | null
         }
       }

@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { MemberSkills } from '@/components/members/MemberSkills';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { NeonButton } from '@/components/ui/NeonButton';
 import { 
   ArrowLeft, 
   Mail, 
@@ -31,10 +30,11 @@ async function getMemberData(userId: string, orgSlug: string) {
   if (!org) return null;
   
   // Get member details
-  const { data: member } = await supabase
+  const { data: member, error: memberError } = await supabase
     .from('organization_members')
     .select(`
-      id,
+      organization_id,
+      user_id,
       role,
       joined_at,
       user:profiles!user_id(
@@ -45,13 +45,17 @@ async function getMemberData(userId: string, orgSlug: string) {
         avatar_url,
         bio,
         major,
-        year_of_study,
-        graduation_year
+        year_of_study
       )
     `)
     .eq('organization_id', org.id)
     .eq('user_id', userId)
     .single();
+    
+  if (memberError) {
+    console.error('Member query error:', memberError);
+    return null;
+  }
     
   if (!member) return null;
   
@@ -98,10 +102,12 @@ export default async function MemberProfilePage({
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Back Button */}
-      <Link href={`/dashboard/org/${slug}/members`}>
-        <NeonButton variant="secondary" size="sm" icon={<ArrowLeft className="h-4 w-4" />}>
-          Back to Members
-        </NeonButton>
+      <Link 
+        href={`/dashboard/org/${slug}/members`}
+        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-300 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-surface hover:text-white transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Members
       </Link>
       
       {/* Profile Header */}
@@ -154,13 +160,10 @@ export default async function MemberProfilePage({
               
               {/* Actions */}
               {!isOwnProfile && (
-                <NeonButton
-                  variant="secondary"
-                  size="sm"
-                  icon={<Mail className="h-4 w-4" />}
-                >
+                <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-300 bg-dark-card border border-dark-border rounded-lg hover:bg-dark-surface hover:text-white transition-colors">
+                  <Mail className="h-4 w-4" />
                   Message
-                </NeonButton>
+                </button>
               )}
             </div>
             

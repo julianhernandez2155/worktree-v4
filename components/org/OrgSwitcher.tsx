@@ -15,7 +15,8 @@ import {
   BarChart3,
   Settings,
   LogOut,
-  X
+  X,
+  Compass
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -38,6 +39,7 @@ interface OrgSwitcherProps {
 
 const navigation = [
   { name: 'Dashboard', href: '', icon: Home },
+  { name: 'Discover', href: '/discover', icon: Compass, isGlobal: true },
   { name: 'My Tasks', href: '/my-tasks', icon: CheckSquare },
   { name: 'Members', href: '/members', icon: Users },
   { name: 'Projects', href: '/projects', icon: FolderOpen },
@@ -250,7 +252,9 @@ export function OrgSwitcher({
           </AnimatePresence>
 
           {navigation.map((item) => {
-            const href = `/dashboard/org/${currentOrg.slug}${item.href}`;
+            const href = item.isGlobal 
+              ? item.href 
+              : `/dashboard/org/${currentOrg.slug}${item.href}`;
             const Icon = item.icon;
             
             return (

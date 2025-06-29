@@ -157,3 +157,32 @@ npm run db:types
 - Architecture decisions: See ADR folder in docs/
 - Performance concerns: Check monitoring dashboards first
 - Security issues: Email security@worktree.edu
+
+## Database Schema Summary
+
+### Core Tables
+- **profiles**: User profiles linked to auth.users(id)
+- **organizations**: Student orgs with unique slugs
+- **organization_members**: Junction table (org_id, user_id, role)
+- **skills**: Master skill list with categories
+- **member_skills**: User skills (normalized, source tracking)
+- **internal_projects**: Org projects
+- **contributions**: Tasks (includes subtasks as JSONB)
+- **task_assignees**: Multiple assignees per task
+- **task_required_skills**: Required/preferred skills per task
+
+### Key Relationships
+- Users → Organizations (many-to-many via organization_members)
+- Organizations → Projects (one-to-many)
+- Projects → Tasks/Contributions (one-to-many)
+- Tasks → Assignees (many-to-many via task_assignees)
+- Users → Skills (many-to-many via member_skills)
+- Tasks → Required Skills (many-to-many via task_required_skills)
+
+### Important Implementation Notes
+- All IDs are UUIDs (gen_random_uuid())
+- All timestamps use timestamptz
+- Subtasks stored as JSONB array in contributions.subtasks
+- Skills normalized via member_skills (not arrays in profiles)
+- contributions.contributor_id is LEGACY - use task_assignees
+- Missing universities table (referenced by profiles.university_id)

@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { PersistentLayout } from '@/components/navigation/PersistentLayout';
 
 export default async function DashboardLayout({
   children,
@@ -26,23 +27,8 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-dark-bg">
-      {/* Dashboard navigation */}
-      <nav className="bg-dark-surface border-b border-dark-border">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <h1 className="text-xl font-bold gradient-text">Worktree</h1>
-            <div className="flex items-center gap-4">
-              <span className="text-gray-400">Welcome, {profile.first_name || user.email}</span>
-            </div>
-          </div>
-        </div>
-      </nav>
-      
-      {/* Main content */}
-      <main className="container mx-auto px-4 py-8">
-        {children}
-      </main>
-    </div>
+    <PersistentLayout>
+      {children}
+    </PersistentLayout>
   );
 }

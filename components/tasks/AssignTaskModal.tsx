@@ -23,9 +23,20 @@ interface Member {
     id: string;
     full_name: string;
     avatar_url?: string;
-    skills: string[];
   };
   role: string;
+  skills: string[]; // Will be populated from member_skills
+  requiredSkillMatches: string[];
+  preferredSkillMatches: string[];
+}
+
+interface TaskRequiredSkill {
+  skill_id: string;
+  importance: 'required' | 'preferred';
+  skill: {
+    id: string;
+    name: string;
+  };
 }
 
 interface AssignTaskModalProps {
@@ -38,6 +49,7 @@ interface AssignTaskModalProps {
 
 export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSelect = true }: AssignTaskModalProps) {
   const [task, setTask] = useState<any>(null);
+  const [taskRequiredSkills, setTaskRequiredSkills] = useState<TaskRequiredSkill[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +57,7 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [existingAssignees, setExistingAssignees] = useState<string[]>([]);
+  const [showOnlyMatches, setShowOnlyMatches] = useState(false);
   
   const supabase = createClient();
 
@@ -54,7 +67,7 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
 
   useEffect(() => {
     filterMembers();
-  }, [searchQuery, members]);
+  }, [searchQuery, members, showOnlyMatches]);
 
   const loadData = async () => {
     try {
@@ -66,6 +79,18 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
         .single();
 
       setTask(taskData);
+
+      // Load task required skills
+      const { data: requiredSkillsData } = await supabase
+        .from('task_required_skills')
+        .select(`
+          skill_id,
+          importance,
+          skill:skills(id, name)
+        `)
+        .eq('task_id', taskId);
+
+      setTaskRequiredSkills(requiredSkillsData || []);
 
       // Get existing assignees
       const { data: assigneesData } = await supabase
@@ -94,16 +119,74 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
           user:profiles!user_id(
             id,
             full_name,
-            avatar_url,
-            skills
+            avatar_url
           )
         `)
         .eq('organization_id', org.id);
 
-      // Remove task load call - not implemented yet
+      if (!membersData) return;
 
-      setMembers(membersData || []);
-      setFilteredMembers(membersData || []);
+      // Get all member IDs
+      const memberIds = membersData.map(m => m.user_id);
+
+      // Fetch skills for all members
+      const { data: memberSkillsData } = await supabase
+        .from('member_skills')
+        .select(`
+          user_id,
+          skill:skills!skill_id(name)
+        `)
+        .in('user_id', memberIds);
+
+      // Create a map of user_id to skills
+      const userSkillsMap = memberSkillsData?.reduce((acc, ms) => {
+        if (!acc[ms.user_id]) {
+          acc[ms.user_id] = [];
+        }
+        if (ms.skill?.name) {
+          acc[ms.user_id].push(ms.skill.name);
+        }
+        return acc;
+      }, {} as Record<string, string[]>) || {};
+
+      // Process members with skill matching
+      const processedMembers: Member[] = membersData.map(member => {
+        const memberSkills = userSkillsMap[member.user_id] || [];
+        
+        // Calculate skill matches
+        const requiredSkillNames = requiredSkillsData
+          ?.filter(rs => rs.importance === 'required')
+          .map(rs => rs.skill.name) || [];
+        
+        const preferredSkillNames = requiredSkillsData
+          ?.filter(rs => rs.importance === 'preferred')
+          .map(rs => rs.skill.name) || [];
+
+        const requiredMatches = memberSkills.filter(skill => 
+          requiredSkillNames.includes(skill)
+        );
+        
+        const preferredMatches = memberSkills.filter(skill => 
+          preferredSkillNames.includes(skill)
+        );
+
+        return {
+          ...member,
+          skills: memberSkills,
+          requiredSkillMatches: requiredMatches,
+          preferredSkillMatches: preferredMatches
+        };
+      });
+
+      // Sort by skill match (required skills first, then preferred)
+      processedMembers.sort((a, b) => {
+        const aScore = a.requiredSkillMatches.length * 2 + a.preferredSkillMatches.length;
+        const bScore = b.requiredSkillMatches.length * 2 + b.preferredSkillMatches.length;
+        return bScore - aScore;
+      });
+
+      setMembers(processedMembers);
+      setFilteredMembers(processedMembers);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -112,31 +195,26 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
   };
 
   const filterMembers = () => {
-    if (!searchQuery) {
-      setFilteredMembers(members);
-      return;
+    let filtered = [...members];
+
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(member => {
+        const nameMatch = member.user.full_name?.toLowerCase().includes(query);
+        const skillMatch = member.skills.some(skill => 
+          skill.toLowerCase().includes(query)
+        );
+        return nameMatch || skillMatch;
+      });
     }
 
-    const query = searchQuery.toLowerCase();
-    const filtered = members.filter(member => {
-      const nameMatch = member.user.full_name?.toLowerCase().includes(query);
-      const skillMatch = member.user.skills?.some(skill => 
-        skill.toLowerCase().includes(query)
+    // Filter by skill matches if enabled
+    if (showOnlyMatches) {
+      filtered = filtered.filter(member => 
+        member.requiredSkillMatches.length > 0 || 
+        member.preferredSkillMatches.length > 0
       );
-      return nameMatch || skillMatch;
-    });
-
-    // Sort by skill match relevance
-    if (task?.skills_used) {
-      filtered.sort((a, b) => {
-        const aMatches = a.user.skills?.filter(s => 
-          task.skills_used.includes(s)
-        ).length || 0;
-        const bMatches = b.user.skills?.filter(s => 
-          task.skills_used.includes(s)
-        ).length || 0;
-        return bMatches - aMatches;
-      });
     }
 
     setFilteredMembers(filtered);
@@ -187,12 +265,26 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
     }
   };
 
-  const getSkillMatchScore = (member: Member) => {
-    if (!task?.skills_used || !member.user.skills) return 0;
-    const matches = member.user.skills.filter(skill => 
-      task.skills_used.includes(skill)
-    ).length;
-    return (matches / task.skills_used.length) * 100;
+  const getSkillMatchInfo = (member: Member) => {
+    const totalRequired = taskRequiredSkills.filter(s => s.importance === 'required').length;
+    const totalPreferred = taskRequiredSkills.filter(s => s.importance === 'preferred').length;
+    
+    const requiredPercent = totalRequired > 0 
+      ? (member.requiredSkillMatches.length / totalRequired) * 100 
+      : 0;
+    
+    const preferredPercent = totalPreferred > 0 
+      ? (member.preferredSkillMatches.length / totalPreferred) * 100 
+      : 0;
+
+    const overallScore = (requiredPercent * 0.7) + (preferredPercent * 0.3);
+
+    return {
+      requiredPercent,
+      preferredPercent,
+      overallScore,
+      hasAllRequired: requiredPercent === 100
+    };
   };
 
   if (loading) return <LoadingSpinner />;
@@ -218,39 +310,82 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
 
         <div className="p-6">
           {/* Task Skills */}
-          {task?.skills_used?.length > 0 && (
+          {taskRequiredSkills.length > 0 && (
             <div className="mb-6">
-              <p className="text-sm text-dark-muted mb-2">Required Skills</p>
-              <div className="flex flex-wrap gap-2">
-                {task.skills_used.map((skill: string) => (
-                  <span 
-                    key={skill}
-                    className="px-3 py-1 bg-neon-green/20 text-neon-green text-sm rounded-full"
-                  >
-                    {skill}
-                  </span>
-                ))}
+              <p className="text-sm text-dark-muted mb-2">Task Requirements</p>
+              <div className="space-y-2">
+                {taskRequiredSkills.filter(s => s.importance === 'required').length > 0 && (
+                  <div>
+                    <p className="text-xs text-dark-muted mb-1">Required Skills</p>
+                    <div className="flex flex-wrap gap-2">
+                      {taskRequiredSkills
+                        .filter(s => s.importance === 'required')
+                        .map((skill) => (
+                          <span 
+                            key={skill.skill_id}
+                            className="px-3 py-1 bg-red-500/20 text-red-400 text-sm rounded-full"
+                          >
+                            {skill.skill.name}
+                          </span>
+                        ))}
+                    </div>
+                  </div>
+                )}
+                {taskRequiredSkills.filter(s => s.importance === 'preferred').length > 0 && (
+                  <div>
+                    <p className="text-xs text-dark-muted mb-1">Preferred Skills</p>
+                    <div className="flex flex-wrap gap-2">
+                      {taskRequiredSkills
+                        .filter(s => s.importance === 'preferred')
+                        .map((skill) => (
+                          <span 
+                            key={skill.skill_id}
+                            className="px-3 py-1 bg-blue-500/20 text-blue-400 text-sm rounded-full"
+                          >
+                            {skill.skill.name}
+                          </span>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* Search */}
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-muted" />
-            <input
-              type="text"
-              placeholder="Search by name or skill..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-dark-card border border-dark-border rounded-lg 
-                       text-white placeholder-dark-muted focus:border-neon-green focus:outline-none"
-            />
+          {/* Search and Filters */}
+          <div className="space-y-3 mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-muted" />
+              <input
+                type="text"
+                placeholder="Search by name or skill..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-dark-card border border-dark-border rounded-lg 
+                         text-white placeholder-dark-muted focus:border-neon-green focus:outline-none"
+              />
+            </div>
+            
+            {taskRequiredSkills.length > 0 && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showOnlyMatches}
+                  onChange={(e) => setShowOnlyMatches(e.target.checked)}
+                  className="w-4 h-4 rounded bg-dark-card border-dark-border text-neon-green 
+                           focus:ring-neon-green focus:ring-offset-0"
+                />
+                <span className="text-sm text-dark-muted">
+                  Show only members with matching skills
+                </span>
+              </label>
+            )}
           </div>
 
           {/* Members List */}
           <div className="space-y-2 max-h-[400px] overflow-y-auto">
             {filteredMembers.map((member) => {
-              const matchScore = getSkillMatchScore(member);
+              const matchInfo = getSkillMatchInfo(member);
               const isSelected = selectedMembers.includes(member.user_id);
               const isExisting = existingAssignees.includes(member.user_id);
 
@@ -275,6 +410,8 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
                       ? "bg-dark-bg border-dark-border opacity-50 cursor-default"
                       : isSelected
                       ? "bg-neon-green/10 border-neon-green cursor-pointer"
+                      : matchInfo.hasAllRequired
+                      ? "bg-dark-card border-green-500/30 hover:border-green-500/50 cursor-pointer"
                       : "bg-dark-card border-dark-border hover:border-dark-muted cursor-pointer"
                   )}
                 >
@@ -294,28 +431,68 @@ export function AssignTaskModal({ taskId, orgSlug, onClose, onAssigned, multiSel
 
                     {/* Member Info */}
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-medium text-white">
                           {member.user.full_name || 'Unknown'}
                           {isExisting && <span className="text-xs text-dark-muted ml-2">(Already assigned)</span>}
                         </h3>
-                        {matchScore > 0 && (
-                          <div className="flex items-center gap-1 px-2 py-0.5 bg-green-500/20 rounded-full">
-                            <Sparkles className="h-3 w-3 text-green-400" />
-                            <span className="text-xs text-green-400">
-                              {Math.round(matchScore)}% match
+                        
+                        {/* Skill Match Badges */}
+                        {member.requiredSkillMatches.length > 0 && (
+                          <div className="flex items-center gap-1 px-2 py-0.5 bg-red-500/20 rounded-full">
+                            <CheckCircle className="h-3 w-3 text-red-400" />
+                            <span className="text-xs text-red-400">
+                              {member.requiredSkillMatches.length} required
                             </span>
                           </div>
                         )}
+                        
+                        {member.preferredSkillMatches.length > 0 && (
+                          <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-500/20 rounded-full">
+                            <Sparkles className="h-3 w-3 text-blue-400" />
+                            <span className="text-xs text-blue-400">
+                              {member.preferredSkillMatches.length} preferred
+                            </span>
+                          </div>
+                        )}
+                        
+                        {matchInfo.hasAllRequired && (
+                          <div className="flex items-center gap-1 px-2 py-0.5 bg-green-500/20 rounded-full">
+                            <CheckCircle className="h-3 w-3 text-green-400" />
+                            <span className="text-xs text-green-400">Perfect match</span>
+                          </div>
+                        )}
                       </div>
+                      
                       <div className="flex items-center gap-3 mt-1 text-sm text-dark-muted">
                         <span>{member.role}</span>
-                        {member.user.skills?.length > 0 && (
+                        {member.skills.length > 0 && (
                           <div className="flex items-center gap-1">
                             <span>•</span>
-                            <span>{member.user.skills.slice(0, 3).join(', ')}</span>
-                            {member.user.skills.length > 3 && (
-                              <span>+{member.user.skills.length - 3} more</span>
+                            <span>
+                              {member.skills.slice(0, 3).map(skill => {
+                                const isRequired = member.requiredSkillMatches.includes(skill);
+                                const isPreferred = member.preferredSkillMatches.includes(skill);
+                                if (isRequired || isPreferred) {
+                                  return (
+                                    <span 
+                                      key={skill} 
+                                      className={cn(
+                                        "font-medium",
+                                        isRequired ? "text-red-400" : "text-blue-400"
+                                      )}
+                                    >
+                                      {skill}
+                                    </span>
+                                  );
+                                }
+                                return skill;
+                              }).reduce((prev, curr, i) => 
+                                i === 0 ? [curr] : [...prev, ', ', curr], [] as React.ReactNode[]
+                              )}
+                            </span>
+                            {member.skills.length > 3 && (
+                              <span> +{member.skills.length - 3} more</span>
                             )}
                           </div>
                         )}
