@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-import { OrganizationProfile } from '@/components/org/OrganizationProfile';
+import { OrganizationProfileWrapper } from '@/components/org/OrganizationProfileWrapper';
 import { createClient } from '@/lib/supabase/server';
 
 interface PageProps {
@@ -147,18 +147,20 @@ export default async function OrgProfilePage({ params }: PageProps) {
   ) : false;
 
   return (
-    <OrganizationProfile
-      organization={organization}
-      memberCount={memberCount || 0}
-      projectCount={projectCount || 0}
-      publicProjects={publicProjects || []}
-      completedProjects={completedProjects || []}
-      skillsCount={skillsCount}
-      skillsList={skillsList}
-      leadershipTeam={leadershipTeam || []}
-      recentActivities={recentActivities || []}
-      isMember={isMember}
-      isAdmin={isAdmin}
+    <OrganizationProfileWrapper
+      initialData={{
+        organization,
+        memberCount: memberCount || 0,
+        projectCount: projectCount || 0,
+        publicProjects: publicProjects || [],
+        completedProjects: completedProjects || [],
+        skillsCount,
+        skillsList,
+        leadershipTeam: leadershipTeam || [],
+        recentActivities: recentActivities || [],
+        isMember,
+        isAdmin
+      }}
     />
   );
 }

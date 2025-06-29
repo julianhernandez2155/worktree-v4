@@ -27,6 +27,7 @@ import { useState } from 'react';
 
 import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
+import { EditOrganizationModal } from '@/components/org/EditOrganizationModal';
 
 interface OrganizationProfileProps {
   organization: any;
@@ -40,6 +41,7 @@ interface OrganizationProfileProps {
   recentActivities: any[];
   isMember: boolean;
   isAdmin: boolean;
+  onUpdate?: () => void;
 }
 
 export function OrganizationProfile({
@@ -53,9 +55,11 @@ export function OrganizationProfile({
   leadershipTeam,
   recentActivities,
   isMember,
-  isAdmin
+  isAdmin,
+  onUpdate
 }: OrganizationProfileProps) {
   const [activeTab, setActiveTab] = useState<'about' | 'projects' | 'contact'>('about');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Format the category nicely
   const formatCategory = (category: string) => {
@@ -146,6 +150,7 @@ export function OrganizationProfile({
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsEditModalOpen(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-dark-card rounded-lg
                              hover:bg-dark-elevated transition-colors"
                   >
@@ -631,24 +636,46 @@ export function OrganizationProfile({
                     Connect With Us
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
-                    {/* Mock social media links for demo */}
-                    {[
-                      { platform: 'Instagram', icon: Instagram, color: 'hover:text-pink-400', url: '#' },
-                      { platform: 'Discord', icon: MessageCircle, color: 'hover:text-purple-400', url: '#' },
-                      { platform: 'LinkedIn', icon: Linkedin, color: 'hover:text-blue-400', url: '#' },
-                      { platform: 'Twitter', icon: Twitter, color: 'hover:text-sky-400', url: '#' },
-                    ].map((social) => (
-                      <a
-                        key={social.platform}
-                        href={social.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`flex items-center gap-2 p-3 bg-dark-surface rounded-lg hover:bg-dark-card transition-colors text-gray-300 ${social.color}`}
-                      >
-                        <social.icon className="w-5 h-5" />
-                        <span className="text-sm">{social.platform}</span>
-                      </a>
-                    ))}
+                    {organization.social_links && organization.social_links.length > 0 ? (
+                      organization.social_links.map((link: any) => {
+                        const platformIcons: Record<string, any> = {
+                          instagram: { icon: Instagram, color: 'hover:text-pink-400' },
+                          discord: { icon: MessageCircle, color: 'hover:text-purple-400' },
+                          linkedin: { icon: Linkedin, color: 'hover:text-blue-400' },
+                          twitter: { icon: Twitter, color: 'hover:text-sky-400' },
+                        };
+                        const platform = platformIcons[link.platform] || { icon: LinkIcon, color: 'hover:text-gray-300' };
+                        const Icon = platform.icon;
+                        
+                        return (
+                          <a
+                            key={link.platform}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`flex items-center gap-2 p-3 bg-dark-surface rounded-lg hover:bg-dark-card transition-colors text-gray-300 ${platform.color}`}
+                          >
+                            <Icon className="w-5 h-5" />
+                            <span className="text-sm capitalize">{link.platform}</span>
+                          </a>
+                        );
+                      })
+                    ) : (
+                      // Show placeholder links if no social links configured
+                      [
+                        { platform: 'Instagram', icon: Instagram, color: 'hover:text-pink-400', url: '#' },
+                        { platform: 'Discord', icon: MessageCircle, color: 'hover:text-purple-400', url: '#' },
+                      ].map((social) => (
+                        <a
+                          key={social.platform}
+                          href={social.url}
+                          className={`flex items-center gap-2 p-3 bg-dark-surface rounded-lg hover:bg-dark-card transition-colors text-gray-300 ${social.color} opacity-50`}
+                        >
+                          <social.icon className="w-5 h-5" />
+                          <span className="text-sm">{social.platform}</span>
+                        </a>
+                      ))
+                    )}
                   </div>
                   {/* Join Discord CTA */}
                   <motion.a
@@ -748,6 +775,17 @@ export function OrganizationProfile({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Edit Modal */}
+      <EditOrganizationModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        organization={organization}
+        onUpdate={() => {
+          setIsEditModalOpen(false);
+          if (onUpdate) onUpdate();
+        }}
+      />
     </div>
   );
 }

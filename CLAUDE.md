@@ -234,3 +234,25 @@ npm run db:types
 - Organization profiles pull from existing `organizations` table
 - Leadership roles: president, vice_president, treasurer, secretary, admin
 - Consider adding fields: mission, values, social_links, founded_date
+
+### Organization Profile Edit Mode (June 28, 2025 - Part 2)
+- **EditOrganizationModal Component**: Full-featured modal for editing organization details
+  - Basic Info: name, description, category
+  - About: mission, what we do, values (dynamic list)
+  - Contact: email, website, location, meeting schedule, join process
+  - Social Media: dynamic links with platform selection
+- **Database Migration**: Added new fields to organizations table
+  - mission, what_we_do, values[], email, location
+  - social_links (JSONB array), meeting_schedule, join_process
+  - achievement and image_url added to internal_projects
+- **Form Features**:
+  - react-hook-form for form management
+  - Real-time validation with error messages
+  - Dynamic fields for values and social links
+  - Success/error notifications
+  - Auto-close on successful save
+- **Security**: RLS policies ensure only org admins can edit
+- **UI Updates**: 
+  - Edit button opens modal when clicked by admin
+  - OrganizationProfileWrapper handles data refresh
+  - Social media links now display from database with proper icons
