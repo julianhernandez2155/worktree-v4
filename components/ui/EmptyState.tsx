@@ -4,21 +4,21 @@ import { cn } from '@/lib/utils';
 import { NeonButton } from './NeonButton';
 
 interface EmptyStateProps {
-  icon?: LucideIcon;
-  iconClassName?: string;
+  icon?: LucideIcon | undefined;
+  iconClassName?: string | undefined;
   title: string;
-  description?: string;
+  description?: string | undefined;
   action?: {
     label: string;
     onClick: () => void;
-    icon?: LucideIcon;
-  };
+    icon?: LucideIcon | undefined;
+  } | undefined;
   secondaryAction?: {
     label: string;
     onClick: () => void;
-  };
-  className?: string;
-  size?: 'sm' | 'md' | 'lg';
+  } | undefined;
+  className?: string | undefined;
+  size?: 'sm' | 'md' | 'lg' | undefined;
 }
 
 const sizeStyles = {
@@ -102,7 +102,7 @@ export function EmptyState({
             <NeonButton
               onClick={action.onClick}
               icon={action.icon}
-              size={size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'default'}
+              size={size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'md'}
             >
               {action.label}
             </NeonButton>
