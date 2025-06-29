@@ -23,11 +23,10 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 
 import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
-import { EditOrganizationModal } from '@/components/org/EditOrganizationModal';
 
 interface OrganizationProfileProps {
   organization: any;
@@ -41,10 +40,12 @@ interface OrganizationProfileProps {
   recentActivities: any[];
   isMember: boolean;
   isAdmin: boolean;
-  onUpdate?: () => void;
+  highlightedSection?: string | null;
+  activeTab?: 'about' | 'projects' | 'contact';
+  onTabChange?: (tab: 'about' | 'projects' | 'contact') => void;
 }
 
-export function OrganizationProfile({
+export const OrganizationProfile = forwardRef<any, OrganizationProfileProps>(({
   organization,
   memberCount,
   projectCount,
@@ -56,10 +57,70 @@ export function OrganizationProfile({
   recentActivities,
   isMember,
   isAdmin,
-  onUpdate
-}: OrganizationProfileProps) {
-  const [activeTab, setActiveTab] = useState<'about' | 'projects' | 'contact'>('about');
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  highlightedSection,
+  activeTab: controlledActiveTab,
+  onTabChange
+}, ref) => {
+  const [localActiveTab, setLocalActiveTab] = useState<'about' | 'projects' | 'contact'>('about');
+  const activeTab = controlledActiveTab ?? localActiveTab;
+  const setActiveTab = onTabChange ?? setLocalActiveTab;
+
+  // Create refs for each section
+  const headerRef = useRef<HTMLDivElement>(null);
+  const missionRef = useRef<HTMLDivElement>(null);
+  const whatWeDoRef = useRef<HTMLDivElement>(null);
+  const valuesRef = useRef<HTMLDivElement>(null);
+  const emailRef = useRef<HTMLDivElement>(null);
+  const websiteRef = useRef<HTMLDivElement>(null);
+  const locationRef = useRef<HTMLDivElement>(null);
+  const meetingScheduleRef = useRef<HTMLDivElement>(null);
+  const joinProcessRef = useRef<HTMLDivElement>(null);
+  const socialLinksRef = useRef<HTMLDivElement>(null);
+
+  // Expose refs to parent
+  useImperativeHandle(ref, () => ({
+    scrollToSection: (field: string) => {
+      let targetRef: React.RefObject<HTMLDivElement> | null = null;
+      
+      switch (field) {
+        case 'name':
+        case 'description':
+        case 'category':
+        case 'logo_url':
+          targetRef = headerRef;
+          break;
+        case 'mission':
+          targetRef = missionRef;
+          break;
+        case 'what_we_do':
+          targetRef = whatWeDoRef;
+          break;
+        case 'values':
+          targetRef = valuesRef;
+          break;
+        case 'email':
+        case 'website':
+          targetRef = emailRef;  // Both are in the Contact Information card
+          break;
+        case 'location':
+          targetRef = meetingScheduleRef;  // Location is now in the meeting section
+          break;
+        case 'meeting_schedule':
+          targetRef = meetingScheduleRef;
+          break;
+        case 'join_process':
+          targetRef = joinProcessRef;
+          break;
+        case 'social_links':
+          targetRef = socialLinksRef;
+          break;
+      }
+      
+      if (targetRef?.current) {
+        targetRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }));
 
   // Format the category nicely
   const formatCategory = (category: string) => {
@@ -84,7 +145,13 @@ export function OrganizationProfile({
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
       {/* Header Section */}
-      <GlassCard className="relative overflow-hidden">
+      <GlassCard 
+        ref={headerRef}
+        className={cn(
+          "relative overflow-hidden transition-all duration-300",
+          (highlightedSection === 'name' || highlightedSection === 'description' || highlightedSection === 'category' || highlightedSection === 'logo_url') && 
+          "ring-2 ring-neon-green/50 shadow-[0_0_20px_rgba(0,255,127,0.3)]"
+        )}>
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-neon-green/10 via-transparent to-neon-blue/10" />
         
@@ -123,10 +190,16 @@ export function OrganizationProfile({
             <div className="flex-1">
               <div className="flex items-start justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">
+                  <h1 className={cn(
+                    "text-3xl font-bold text-white mb-2 transition-all duration-300",
+                    highlightedSection === 'name' && "text-neon-green drop-shadow-[0_0_10px_rgba(0,255,127,0.5)]"
+                  )}>
                     {organization.name}
                   </h1>
-                  <p className="text-lg text-gray-300 mb-4">
+                  <p className={cn(
+                    "text-lg text-gray-300 mb-4 transition-all duration-300",
+                    highlightedSection === 'description' && "text-neon-green drop-shadow-[0_0_10px_rgba(0,255,127,0.5)]"
+                  )}>
                     {organization.description || 'Building amazing things together'}
                   </p>
                   <div className="flex items-center gap-4 text-sm text-gray-400">
@@ -138,7 +211,10 @@ export function OrganizationProfile({
                       <FolderOpen className="w-4 h-4" />
                       {projectCount} active projects
                     </span>
-                    <span className="flex items-center gap-1">
+                    <span className={cn(
+                      "flex items-center gap-1 transition-all duration-300",
+                      highlightedSection === 'category' && "text-neon-green drop-shadow-[0_0_10px_rgba(0,255,127,0.5)]"
+                    )}>
                       <Award className="w-4 h-4" />
                       {formatCategory(organization.category)}
                     </span>
@@ -147,16 +223,17 @@ export function OrganizationProfile({
 
                 {/* Edit button for admins */}
                 {isAdmin && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setIsEditModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-dark-card rounded-lg
-                             hover:bg-dark-elevated transition-colors"
-                  >
-                    <Edit className="w-4 h-4" />
-                    <span className="text-sm">Edit Profile</span>
-                  </motion.button>
+                  <Link href={`/dashboard/org/${organization.slug}/edit`}>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center gap-2 px-4 py-2 bg-dark-card rounded-lg
+                               hover:bg-dark-elevated transition-colors"
+                    >
+                      <Edit className="w-4 h-4" />
+                      <span className="text-sm">Edit Profile</span>
+                    </motion.button>
+                  </Link>
                 )}
               </div>
             </div>
@@ -258,7 +335,12 @@ export function OrganizationProfile({
               {/* Left Column */}
               <div className="space-y-4">
                 {/* Mission */}
-                <GlassCard>
+                <GlassCard 
+                  ref={missionRef}
+                  className={cn(
+                    "transition-all duration-300",
+                    highlightedSection === 'mission' && "ring-2 ring-neon-green/50 shadow-[0_0_20px_rgba(0,255,127,0.3)]"
+                  )}>
                   <div className="p-5">
                     <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                       <Target className="w-5 h-5 text-neon-green" />
@@ -272,7 +354,12 @@ export function OrganizationProfile({
                 </GlassCard>
 
                 {/* What We Do */}
-                <GlassCard>
+                <GlassCard 
+                  ref={whatWeDoRef}
+                  className={cn(
+                    "transition-all duration-300",
+                    highlightedSection === 'what_we_do' && "ring-2 ring-neon-green/50 shadow-[0_0_20px_rgba(0,255,127,0.3)]"
+                  )}>
                   <div className="p-5">
                     <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-neon-blue" />
@@ -417,7 +504,12 @@ export function OrganizationProfile({
             </div>
 
             {/* Values - Full Width */}
-            <GlassCard>
+            <GlassCard 
+              ref={valuesRef}
+              className={cn(
+                "transition-all duration-300",
+                highlightedSection === 'values' && "ring-2 ring-neon-green/50 shadow-[0_0_20px_rgba(0,255,127,0.3)]"
+              )}>
               <div className="p-5">
                 <h3 className="text-lg font-semibold text-white mb-4">Our Values</h3>
                 <div className="grid md:grid-cols-3 gap-4">
@@ -588,7 +680,12 @@ export function OrganizationProfile({
             {/* Multi-column contact layout */}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Contact Information */}
-              <GlassCard>
+              <GlassCard 
+                ref={emailRef}
+                className={cn(
+                  "transition-all duration-300",
+                  (highlightedSection === 'email' || highlightedSection === 'website') && "ring-2 ring-neon-green/50 shadow-[0_0_20px_rgba(0,255,127,0.3)]"
+                )}>
                 <div className="p-5">
                   <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <Mail className="w-5 h-5 text-neon-green" />
@@ -629,7 +726,12 @@ export function OrganizationProfile({
               </GlassCard>
 
               {/* Social Media */}
-              <GlassCard>
+              <GlassCard 
+                ref={socialLinksRef}
+                className={cn(
+                  "transition-all duration-300",
+                  highlightedSection === 'social_links' && "ring-2 ring-neon-green/50 shadow-[0_0_20px_rgba(0,255,127,0.3)]"
+                )}>
                 <div className="p-5">
                   <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <MessageCircle className="w-5 h-5 text-neon-blue" />
@@ -750,7 +852,12 @@ export function OrganizationProfile({
             </div>
 
             {/* Interest Form or Meeting Times */}
-            <GlassCard>
+            <GlassCard 
+              ref={meetingScheduleRef}
+              className={cn(
+                "transition-all duration-300",
+                (highlightedSection === 'location' || highlightedSection === 'meeting_schedule' || highlightedSection === 'join_process') && "ring-2 ring-neon-green/50 shadow-[0_0_20px_rgba(0,255,127,0.3)]"
+              )}>
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-orange-400" />
@@ -759,9 +866,50 @@ export function OrganizationProfile({
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <h4 className="font-medium text-white mb-2">Regular Meetings</h4>
-                    <p className="text-gray-400">
-                      {organization.meeting_schedule || 'Thursdays at 7:00 PM in Student Union Room 301'}
-                    </p>
+                    <div className="text-gray-400">
+                      {(() => {
+                        let scheduleData = organization.meeting_schedule;
+                        
+                        // Parse if it's a string
+                        if (typeof scheduleData === 'string') {
+                          try {
+                            scheduleData = JSON.parse(scheduleData);
+                          } catch (e) {
+                            // If parsing fails, show the string as is or default message
+                            return scheduleData || 'Meeting times to be announced';
+                          }
+                        }
+                        
+                        // Handle JSONB format
+                        if (scheduleData && typeof scheduleData === 'object') {
+                          const activeDays = Object.entries(scheduleData)
+                            .filter(([day, schedule]: any) => 
+                              day !== 'legacy_text' && schedule?.enabled
+                            )
+                            .map(([day, schedule]: any) => {
+                              const dayName = day.charAt(0).toUpperCase() + day.slice(1);
+                              return `${dayName}s at ${schedule.time}`;
+                            });
+                          
+                          if (activeDays.length > 0) {
+                            return (
+                              <>
+                                <p>{activeDays.join(', ')}</p>
+                                {organization.location && (
+                                  <p className="text-sm mt-1">
+                                    <MapPin className="inline w-3 h-3 mr-1" />
+                                    {organization.location}
+                                  </p>
+                                )}
+                              </>
+                            );
+                          }
+                        }
+                        
+                        // Fallback
+                        return 'Meeting times to be announced';
+                      })()}
+                    </div>
                   </div>
                   <div>
                     <h4 className="font-medium text-white mb-2">How to Join</h4>
@@ -775,17 +923,8 @@ export function OrganizationProfile({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Edit Modal */}
-      <EditOrganizationModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        organization={organization}
-        onUpdate={() => {
-          setIsEditModalOpen(false);
-          if (onUpdate) onUpdate();
-        }}
-      />
     </div>
   );
-}
+});
+
+OrganizationProfile.displayName = 'OrganizationProfile';

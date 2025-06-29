@@ -24,15 +24,9 @@ export function OrganizationProfileWrapper({ initialData }: OrganizationProfileW
   const router = useRouter();
   const [data, setData] = useState(initialData);
 
-  const handleUpdate = () => {
-    // Refresh the page to get updated data
-    router.refresh();
-  };
-
   return (
     <OrganizationProfile
       {...data}
-      onUpdate={handleUpdate}
     />
   );
 }
