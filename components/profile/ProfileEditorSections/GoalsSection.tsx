@@ -1,191 +1,178 @@
 'use client';
 
-import { Plus, X, Target, Heart } from 'lucide-react';
+import { useState } from 'react';
+import { X, Plus, Sparkles } from 'lucide-react';
+import { Control, UseFormRegister, Controller } from 'react-hook-form';
 
 interface GoalsSectionProps {
-  register: any;
-  control: any;
-  errors: any;
-  watch: any;
-  setValue: any;
+  control: Control<any>;
+  register: UseFormRegister<any>;
   onFieldFocus: (field: string) => void;
+  onFieldBlur: () => void;
 }
-
-const INTEREST_SUGGESTIONS = [
-  'Web Development',
-  'Mobile Development',
-  'Machine Learning',
-  'Data Science',
-  'UI/UX Design',
-  'Product Management',
-  'Entrepreneurship',
-  'Marketing',
-  'Finance',
-  'Consulting',
-  'Research',
-  'Public Speaking',
-  'Writing',
-  'Photography',
-  'Video Production'
-];
 
 const LOOKING_FOR_OPTIONS = [
   'Internships',
   'Research Opportunities',
   'Project Collaborations',
   'Mentorship',
-  'Leadership Roles',
-  'Hackathon Teams',
-  'Study Groups',
+  'Full-time Positions',
+  'Part-time Work',
+  'Volunteer Work',
   'Networking',
   'Skill Development',
-  'Career Guidance'
+  'Leadership Roles'
 ];
 
-export function GoalsSection({ 
-  register, 
-  errors, 
-  watch, 
-  setValue, 
-  onFieldFocus 
-}: GoalsSectionProps) {
-  const interests = watch('interests') || [];
-  const lookingFor = watch('looking_for') || [];
-
-  const addInterest = (interest: string) => {
-    if (!interests.includes(interest)) {
-      setValue('interests', [...interests, interest]);
-    }
-  };
-
-  const removeInterest = (index: number) => {
-    setValue('interests', interests.filter((_: string, i: number) => i !== index));
-  };
-
-  const toggleLookingFor = (option: string) => {
-    if (lookingFor.includes(option)) {
-      setValue('looking_for', lookingFor.filter((item: string) => item !== option));
-    } else {
-      setValue('looking_for', [...lookingFor, option]);
-    }
-  };
+export function GoalsSection({ control, register, onFieldFocus, onFieldBlur }: GoalsSectionProps) {
+  const [newInterest, setNewInterest] = useState('');
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold text-white mb-4">Goals & Interests</h2>
-      
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-1">Goals & Interests</h3>
+        <p className="text-sm text-gray-400">
+          Share what you're passionate about and what opportunities you're seeking
+        </p>
+      </div>
+
       {/* Interests */}
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">
-          <Heart className="inline w-4 h-4 mr-1" />
-          Your Interests
+          Interests
         </label>
-        
-        {/* Current interests */}
-        <div className="flex flex-wrap gap-2 mb-3">
-          {interests.map((interest: string, index: number) => (
-            <span
-              key={index}
-              className="px-3 py-1 bg-dark-surface text-gray-300 rounded-full text-sm flex items-center gap-1"
+        <Controller
+          name="interests"
+          control={control}
+          render={({ field }) => (
+            <div 
+              className="space-y-3"
+              onFocus={() => onFieldFocus('interests')}
+              onBlur={onFieldBlur}
             >
-              {interest}
-              <button
-                type="button"
-                onClick={() => removeInterest(index)}
-                className="hover:text-red-400 transition-colors"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-        </div>
-
-        {/* Interest suggestions */}
-        <p className="text-sm text-gray-400 mb-2">Click to add interests:</p>
-        <div className="flex flex-wrap gap-2">
-          {INTEREST_SUGGESTIONS.filter(s => !interests.includes(s)).map(suggestion => (
-            <button
-              key={suggestion}
-              type="button"
-              onClick={() => {
-                addInterest(suggestion);
-                onFieldFocus('interests');
-              }}
-              className="px-3 py-1 bg-dark-surface/50 hover:bg-dark-surface text-gray-400 hover:text-white rounded-full text-sm transition-colors"
-            >
-              <Plus className="inline w-3 h-3 mr-1" />
-              {suggestion}
-            </button>
-          ))}
-        </div>
-
-        {/* Custom interest input */}
-        <div className="mt-3 flex gap-2">
-          <input
-            type="text"
-            placeholder="Add custom interest..."
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                const value = e.currentTarget.value.trim();
-                if (value && !interests.includes(value)) {
-                  addInterest(value);
-                  e.currentTarget.value = '';
-                }
-              }
-            }}
-            className="flex-1 px-3 py-1 bg-dark-surface border border-dark-border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-neon-green"
-          />
-        </div>
+              <div className="flex flex-wrap gap-2">
+                {field.value.map((interest: string, index: number) => (
+                  <div
+                    key={index}
+                    className="group flex items-center gap-2 px-3 py-1.5 bg-dark-surface rounded-full hover:bg-dark-card transition-colors"
+                  >
+                    <span className="text-sm">{interest}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newInterests = [...field.value];
+                        newInterests.splice(index, 1);
+                        field.onChange(newInterests);
+                      }}
+                      className="text-gray-400 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newInterest}
+                  onChange={(e) => setNewInterest(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (newInterest.trim()) {
+                        field.onChange([...field.value, newInterest.trim()]);
+                        setNewInterest('');
+                      }
+                    }
+                  }}
+                  className="flex-1 px-4 py-2 bg-dark-surface border border-dark-border rounded-lg focus:border-neon-green focus:outline-none transition-colors"
+                  placeholder="Add an interest (e.g., Machine Learning, Web Development)"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newInterest.trim()) {
+                      field.onChange([...field.value, newInterest.trim()]);
+                      setNewInterest('');
+                    }
+                  }}
+                  disabled={!newInterest.trim()}
+                  className="p-2 bg-neon-green text-black rounded-lg hover:bg-neon-green/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <p className="text-xs text-gray-500">
+                Press Enter or click + to add interests
+              </p>
+            </div>
+          )}
+        />
       </div>
 
       {/* Looking For */}
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">
-          <Target className="inline w-4 h-4 mr-1" />
           What are you looking for?
         </label>
-        <p className="text-sm text-gray-400 mb-3">
-          Select all that apply to help others understand how they can connect with you
-        </p>
-        
-        <div className="grid grid-cols-2 gap-2">
-          {LOOKING_FOR_OPTIONS.map(option => (
-            <label
-              key={option}
-              className={`
-                flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-all
-                ${lookingFor.includes(option) 
-                  ? 'bg-neon-green/20 border-neon-green text-white' 
-                  : 'bg-dark-surface border-dark-border text-gray-300 hover:text-white hover:border-gray-600'
-                }
-                border
-              `}
+        <Controller
+          name="looking_for"
+          control={control}
+          render={({ field }) => (
+            <div 
+              className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+              onFocus={() => onFieldFocus('looking_for')}
+              onBlur={onFieldBlur}
             >
-              <input
-                type="checkbox"
-                checked={lookingFor.includes(option)}
-                onChange={() => {
-                  toggleLookingFor(option);
-                  onFieldFocus('looking_for');
-                }}
-                className="hidden"
-              />
-              <div className={`
-                w-4 h-4 rounded border-2 flex items-center justify-center
-                ${lookingFor.includes(option) 
-                  ? 'border-neon-green bg-neon-green' 
-                  : 'border-gray-500'
-                }
-              `}>
-                {lookingFor.includes(option) && (
-                  <div className="w-2 h-2 bg-black rounded-sm" />
-                )}
-              </div>
-              <span className="text-sm">{option}</span>
-            </label>
-          ))}
-        </div>
+              {LOOKING_FOR_OPTIONS.map(option => (
+                <label
+                  key={option}
+                  className="flex items-center gap-3 p-3 bg-dark-surface rounded-lg hover:bg-dark-card transition-colors cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={field.value.includes(option)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        field.onChange([...field.value, option]);
+                      } else {
+                        field.onChange(field.value.filter((v: string) => v !== option));
+                      }
+                    }}
+                    className="w-4 h-4 text-neon-green bg-dark-surface border-dark-border rounded focus:ring-neon-green focus:ring-offset-0"
+                  />
+                  <span className="text-sm">{option}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        />
+      </div>
+
+      {/* Open to Opportunities */}
+      <div>
+        <label 
+          className="flex items-center gap-4 p-4 bg-dark-surface rounded-lg hover:bg-dark-card transition-colors cursor-pointer"
+          onFocus={() => onFieldFocus('open_to_opportunities')}
+          onBlur={onFieldBlur}
+        >
+          <input
+            type="checkbox"
+            {...register('open_to_opportunities')}
+            className="w-5 h-5 text-neon-green bg-dark-surface border-dark-border rounded focus:ring-neon-green focus:ring-offset-0"
+          />
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-green-400" />
+              <span className="font-medium text-white">Open to Opportunities</span>
+            </div>
+            <p className="text-sm text-gray-400 mt-1">
+              Let organizations know you're actively looking for opportunities
+            </p>
+          </div>
+        </label>
       </div>
     </div>
   );

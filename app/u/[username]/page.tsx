@@ -156,8 +156,6 @@ export default async function UserProfilePage({ params, searchParams }: PageProp
       contributions={contributions || []}
       recentActivity={recentActivity || []}
       isOwnProfile={currentUser?.id === profile.id}
-      currentUserId={currentUser?.id}
-      activeTab={activeTab}
     />
   );
 }

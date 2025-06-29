@@ -1,123 +1,139 @@
 'use client';
 
-import { BookOpen, GraduationCap, Calendar } from 'lucide-react';
+import { UseFormRegister, FieldErrors } from 'react-hook-form';
+import { Globe, Linkedin, Github, MapPin } from 'lucide-react';
 
 interface AboutSectionProps {
-  register: any;
-  control: any;
-  errors: any;
-  watch: any;
-  setValue: any;
+  register: UseFormRegister<any>;
+  errors: FieldErrors<any>;
   onFieldFocus: (field: string) => void;
+  onFieldBlur: () => void;
 }
-
-const MAJORS = [
-  'Computer Science',
-  'Information Technology',
-  'Software Engineering',
-  'Data Science',
-  'Computer Engineering',
-  'Business Administration',
-  'Marketing',
-  'Finance',
-  'Economics',
-  'Psychology',
-  'Biology',
-  'Chemistry',
-  'Physics',
-  'Mathematics',
-  'Statistics',
-  'Political Science',
-  'Communications',
-  'Journalism',
-  'Graphic Design',
-  'Other'
-];
-
-const YEARS = [
-  '2024',
-  '2025',
-  '2026',
-  '2027',
-  '2028'
-];
 
 export function AboutSection({ 
   register, 
-  errors, 
-  watch, 
-  setValue, 
-  onFieldFocus 
+  errors,
+  onFieldFocus,
+  onFieldBlur
 }: AboutSectionProps) {
-  const bio = watch('bio');
-
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold text-white mb-4">About You</h2>
-      
-      {/* Bio */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          <BookOpen className="inline w-4 h-4 mr-1" />
-          Bio
-        </label>
-        <textarea
-          {...register('bio')}
-          onFocus={() => onFieldFocus('bio')}
-          rows={4}
-          className="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green resize-none"
-          placeholder="Tell us about yourself, your passions, and what drives you..."
-        />
-        <div className="mt-1 flex justify-between text-sm">
-          <p className="text-gray-400">
-            Write a compelling bio that showcases your personality and goals
+        <h3 className="text-lg font-semibold text-white mb-1">About You</h3>
+        <p className="text-sm text-gray-400">
+          Tell others about yourself and how to connect with you
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Bio
+          </label>
+          <textarea
+            {...register('bio', {
+              maxLength: {
+                value: 500,
+                message: 'Bio must be 500 characters or less'
+              }
+            })}
+            rows={4}
+            className="w-full px-4 py-3 bg-dark-surface border border-dark-border rounded-lg focus:border-neon-green focus:outline-none transition-colors resize-none"
+            placeholder="Tell us about yourself, your interests, and what drives you..."
+            onFocus={() => onFieldFocus('bio')}
+            onBlur={onFieldBlur}
+          />
+          {errors.bio && (
+            <p className="mt-1 text-sm text-red-400">{String(errors.bio.message)}</p>
+          )}
+          <p className="mt-1 text-xs text-gray-500">
+            A brief introduction about yourself (max 500 characters)
           </p>
-          <span className={`${bio?.length > 500 ? 'text-red-400' : 'text-gray-400'}`}>
-            {bio?.length || 0}/500
-          </span>
         </div>
-      </div>
 
-      {/* Major */}
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          <GraduationCap className="inline w-4 h-4 mr-1" />
-          Major
-        </label>
-        <select
-          {...register('major', { required: 'Please select your major' })}
-          onFocus={() => onFieldFocus('major')}
-          className="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
-        >
-          <option value="">Select your major</option>
-          {MAJORS.map(major => (
-            <option key={major} value={major}>{major}</option>
-          ))}
-        </select>
-        {errors.major && (
-          <p className="mt-1 text-sm text-red-400">{errors.major.message}</p>
-        )}
-      </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            <MapPin className="inline w-4 h-4 mr-1" />
+            Location
+          </label>
+          <input
+            {...register('location')}
+            type="text"
+            className="w-full px-4 py-3 bg-dark-surface border border-dark-border rounded-lg focus:border-neon-green focus:outline-none transition-colors"
+            placeholder="Syracuse, NY"
+            onFocus={() => onFieldFocus('location')}
+            onBlur={onFieldBlur}
+          />
+        </div>
 
-      {/* Year of Study */}
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          <Calendar className="inline w-4 h-4 mr-1" />
-          Expected Graduation Year
-        </label>
-        <select
-          {...register('year_of_study', { required: 'Please select your graduation year' })}
-          onFocus={() => onFieldFocus('year_of_study')}
-          className="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-neon-green"
-        >
-          <option value="">Select graduation year</option>
-          {YEARS.map(year => (
-            <option key={year} value={year}>{year}</option>
-          ))}
-        </select>
-        {errors.year_of_study && (
-          <p className="mt-1 text-sm text-red-400">{errors.year_of_study.message}</p>
-        )}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            <Globe className="inline w-4 h-4 mr-1" />
+            Personal Website
+          </label>
+          <input
+            {...register('website', {
+              pattern: {
+                value: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
+                message: 'Please enter a valid URL'
+              }
+            })}
+            type="url"
+            className="w-full px-4 py-3 bg-dark-surface border border-dark-border rounded-lg focus:border-neon-green focus:outline-none transition-colors"
+            placeholder="https://johndoe.com"
+            onFocus={() => onFieldFocus('website')}
+            onBlur={onFieldBlur}
+          />
+          {errors.website && (
+            <p className="mt-1 text-sm text-red-400">{String(errors.website.message)}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            <Linkedin className="inline w-4 h-4 mr-1" />
+            LinkedIn Profile
+          </label>
+          <input
+            {...register('linkedin_url', {
+              pattern: {
+                value: /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/,
+                message: 'Please enter a valid LinkedIn profile URL'
+              }
+            })}
+            type="url"
+            className="w-full px-4 py-3 bg-dark-surface border border-dark-border rounded-lg focus:border-neon-green focus:outline-none transition-colors"
+            placeholder="https://linkedin.com/in/johndoe"
+            onFocus={() => onFieldFocus('linkedin_url')}
+            onBlur={onFieldBlur}
+          />
+          {errors.linkedin_url && (
+            <p className="mt-1 text-sm text-red-400">{String(errors.linkedin_url.message)}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            <Github className="inline w-4 h-4 mr-1" />
+            GitHub Profile
+          </label>
+          <input
+            {...register('github_url', {
+              pattern: {
+                value: /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9-]+\/?$/,
+                message: 'Please enter a valid GitHub profile URL'
+              }
+            })}
+            type="url"
+            className="w-full px-4 py-3 bg-dark-surface border border-dark-border rounded-lg focus:border-neon-green focus:outline-none transition-colors"
+            placeholder="https://github.com/johndoe"
+            onFocus={() => onFieldFocus('github_url')}
+            onBlur={onFieldBlur}
+          />
+          {errors.github_url && (
+            <p className="mt-1 text-sm text-red-400">{String(errors.github_url.message)}</p>
+          )}
+        </div>
       </div>
     </div>
   );

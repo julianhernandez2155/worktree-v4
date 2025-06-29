@@ -3,9 +3,6 @@
 import { useRef, forwardRef, useImperativeHandle } from 'react';
 import { 
   Edit,
-  Share2,
-  Download,
-  Users,
   CheckCircle2,
   Star,
   Target,
@@ -19,7 +16,6 @@ import Link from 'next/link';
 import { AvatarFallback } from '@/components/ui/avatar-fallback';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { cn } from '@/lib/utils';
-import { ActivityHeatmap } from './ActivityHeatmap';
 
 interface UserProfileProps {
   profile: any;
@@ -31,7 +27,7 @@ interface UserProfileProps {
     contributionHours: number;
   };
   contributions: any[];
-  recentActivity: any[];
+  recentActivity?: any[];
   isOwnProfile: boolean;
   highlightedSection?: string | null;
 }
@@ -41,7 +37,6 @@ export const UserProfile = forwardRef<any, UserProfileProps>(({
   profile,
   stats,
   contributions,
-  recentActivity,
   isOwnProfile,
   highlightedSection
 }, ref) => {
@@ -49,17 +44,27 @@ export const UserProfile = forwardRef<any, UserProfileProps>(({
   // Create refs for sections
   const headerRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
+  const bioRef = useRef<HTMLDivElement>(null);
+  const skillsRef = useRef<HTMLDivElement>(null);
 
   // Expose refs to parent
   useImperativeHandle(ref, () => ({
-    scrollToSection: (field: string) => {
+    scrollToSection: (section: string) => {
       let targetRef: React.RefObject<HTMLDivElement> | null = null;
       
-      switch (field) {
-        case 'full_name':
-        case 'avatar_url':
-        case 'tagline':
+      switch (section) {
+        case 'header':
+        case 'avatar':
+        case 'cover':
           targetRef = headerRef;
+          break;
+        case 'bio':
+        case 'looking_for':
+          targetRef = bioRef;
+          break;
+        case 'skills':
+        case 'interests':
+          targetRef = skillsRef;
           break;
       }
 
@@ -68,16 +73,6 @@ export const UserProfile = forwardRef<any, UserProfileProps>(({
       }
     }
   }));
-
-  const handleShare = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/u/${profile.username}`);
-    // TODO: Show toast notification
-  };
-
-  const handleDownloadResume = () => {
-    // TODO: Implement resume generation
-    console.log('Download resume');
-  };
 
   // Calculate profile completion
   const profileCompletion = [
@@ -106,7 +101,7 @@ export const UserProfile = forwardRef<any, UserProfileProps>(({
             )}
           >
             {/* Cover Photo Section - Edge to edge within card */}
-            <div className="relative h-48 bg-gradient-to-br from-purple-600/20 via-blue-600/20 to-neon-green/20">
+            <div className="relative h-32 bg-gradient-to-br from-purple-600/20 via-blue-600/20 to-neon-green/20">
               {profile.cover_photo_url && (
                 <Image
                   src={profile.cover_photo_url}
@@ -122,12 +117,13 @@ export const UserProfile = forwardRef<any, UserProfileProps>(({
             
             {/* Profile Content */}
             <div className="relative px-6 pb-6">
-              <div className="flex">
-                {/* Left Section - Avatar, Name, Headline */}
-                <div className="flex-1">
-                  <div className="flex gap-4">
-                    {/* Avatar */}
-                    <div className="relative -mt-16">
+              {/* Main Row - Avatar, Stats, Org Badge */}
+              <div className="flex items-start gap-6">
+                {/* Avatar Column with Name/Major Below */}
+                <div className="flex-shrink-0">
+                  {/* Avatar */}
+                  <div className="relative -mt-12">
+                    <div className="relative w-fit">
                       <div className="rounded-full border-4 border-dark-card bg-dark-card p-1">
                         {profile.avatar_url ? (
                           <Image
@@ -152,95 +148,42 @@ export const UserProfile = forwardRef<any, UserProfileProps>(({
                         </div>
                       )}
                     </div>
-
-                    {/* User Info */}
-                    <div className="pt-4">
-                      <h1 className="text-2xl font-bold text-white">
-                        {profile.full_name || profile.username}
-                      </h1>
-                      <p className="text-gray-400 mt-1">
-                        {profile.major && <span>{profile.major}</span>}
-                        {profile.major && profile.year_of_study && <span className="mx-1">•</span>}
-                        {profile.year_of_study && <span>Class of {profile.year_of_study}</span>}
-                      </p>
-                      <div 
-                        ref={statsRef}
-                        className="flex items-center gap-4 text-sm text-gray-500 mt-2"
-                      >
-                        <span>{stats.projectsCompleted} Projects Completed</span>
-                        <span>•</span>
-                        <span>{stats.skillsVerified} Verified Skills</span>
-                      </div>
-                    </div>
                   </div>
-
-                  {/* Headline Section */}
-                  <div className="mt-4">
-                    <p className="text-lg text-gray-300">
-                      {profile.tagline || (
-                        <span className="text-gray-500 italic">
-                          {isOwnProfile ? "Add a professional headline" : "No headline yet"}
-                        </span>
-                      )}
+                  
+                  {/* Name and Major - Left Aligned */}
+                  <div className="mt-3">
+                    <h1 className="text-2xl font-bold text-white whitespace-nowrap">
+                      {profile.full_name || profile.username}
+                    </h1>
+                    <p className="text-gray-400 mt-1 whitespace-nowrap">
+                      {profile.major && <span>{profile.major}</span>}
+                      {profile.major && profile.year_of_study && <span className="mx-1">•</span>}
+                      {profile.year_of_study && <span>Class of {profile.year_of_study}</span>}
                     </p>
-                  </div>
-
-                  {/* Open To Button */}
-                  <div className="mt-4">
-                    {profile.open_to_opportunities ? (
-                      <button className="flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-400 border border-green-500/30 rounded-full hover:bg-green-500/20 transition-colors">
-                        <Sparkles className="w-4 h-4" />
-                        Open to Opportunities
-                      </button>
-                    ) : isOwnProfile && (
-                      <button className="flex items-center gap-2 px-4 py-2 text-gray-400 border border-dark-border rounded-full hover:bg-dark-surface transition-colors">
-                        <Sparkles className="w-4 h-4" />
-                        Set status
-                      </button>
-                    )}
                   </div>
                 </div>
 
-                {/* Right Section - Organizations and Actions */}
-                <div className="flex flex-col items-end gap-4">
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-2 mt-4">
-                    {isOwnProfile ? (
-                      <Link
-                        href="/dashboard/profile/edit"
-                        className="flex items-center gap-2 px-4 py-2 bg-neon-green text-black font-medium rounded-lg hover:bg-neon-green/90 transition-colors"
-                      >
-                        <Edit className="w-4 h-4" />
-                        Edit Profile
-                      </Link>
-                    ) : (
-                      <button className="flex items-center gap-2 px-4 py-2 bg-neon-green text-black font-medium rounded-lg hover:bg-neon-green/90 transition-colors">
-                        <MessageCircle className="w-4 h-4" />
-                        Message
-                      </button>
-                    )}
-                    <button
-                      onClick={handleShare}
-                      className="p-2 bg-dark-surface hover:bg-dark-card border border-dark-border rounded-lg transition-colors"
-                    >
-                      <Share2 className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={handleDownloadResume}
-                      className="p-2 bg-dark-surface hover:bg-dark-card border border-dark-border rounded-lg transition-colors"
-                    >
-                      <Download className="w-5 h-5" />
-                    </button>
+                {/* Stats - Center */}
+                <div className="flex-1 pt-12">
+                  <div 
+                    ref={statsRef}
+                    className="flex items-center gap-4 text-sm text-gray-500"
+                  >
+                    <span>{stats.projectsCompleted} Projects Completed</span>
+                    <span>•</span>
+                    <span>{stats.skillsVerified} Verified Skills</span>
                   </div>
+                </div>
 
-                  {/* Organization Badges */}
+                {/* Right Section - Organization Badge (inline with name) */}
+                <div className="pt-12">
                   {profile.organization_members?.filter((m: any) => 
                     ['president', 'vice_president', 'treasurer', 'secretary', 'admin', 'leader'].includes(m.role)
                   ).length > 0 && (
                     <div className="space-y-2">
                       {profile.organization_members?.filter((m: any) => 
                         ['president', 'vice_president', 'treasurer', 'secretary', 'admin', 'leader'].includes(m.role)
-                      ).slice(0, 2).map((membership: any) => (
+                      ).slice(0, 1).map((membership: any) => (
                         <Link
                           key={membership.organization_id}
                           href={`/dashboard/org/${membership.organizations.slug}`}
@@ -258,6 +201,56 @@ export const UserProfile = forwardRef<any, UserProfileProps>(({
                   )}
                 </div>
               </div>
+
+              {/* Bottom Section - Headline and Status */}
+              <div className="mt-6">
+                {/* Headline Section */}
+                <div>
+                  <p className="text-lg text-gray-300">
+                    {profile.tagline || (
+                      <span className="text-gray-500 italic">
+                        {isOwnProfile ? "Add a professional headline" : "No headline yet"}
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                {/* Open To Button */}
+                <div className="mt-4">
+                  {profile.open_to_opportunities ? (
+                    <button className="flex items-center gap-2 px-4 py-2 bg-green-500/10 text-green-400 border border-green-500/30 rounded-full hover:bg-green-500/20 transition-colors">
+                      <Sparkles className="w-4 h-4" />
+                      Open to Opportunities
+                    </button>
+                  ) : isOwnProfile && (
+                    <button className="flex items-center gap-2 px-4 py-2 text-gray-400 border border-dark-border rounded-full hover:bg-dark-surface transition-colors">
+                      <Sparkles className="w-4 h-4" />
+                      Set status
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Edit Button - Top Right Corner */}
+              {isOwnProfile && (
+                <div className="absolute top-4 right-4">
+                  <Link
+                    href="/dashboard/profile/edit"
+                    className="p-2 bg-dark-surface hover:bg-dark-card border border-dark-border rounded-lg transition-colors inline-block"
+                    title="Edit Profile"
+                  >
+                    <Edit className="w-4 h-4 text-gray-400 hover:text-white" />
+                  </Link>
+                </div>
+              )}
+              {!isOwnProfile && (
+                <div className="absolute top-4 right-4">
+                  <button className="flex items-center gap-2 px-4 py-2 bg-neon-green text-black font-medium rounded-lg hover:bg-neon-green/90 transition-colors">
+                    <MessageCircle className="w-4 h-4" />
+                    Message
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -267,7 +260,13 @@ export const UserProfile = forwardRef<any, UserProfileProps>(({
           <div className="space-y-6">
             {/* About Me / Bio */}
             <GlassCard>
-              <div className="p-6">
+              <div 
+                ref={bioRef}
+                className={cn(
+                  "p-6 transition-all duration-300",
+                  (highlightedSection === 'bio' || highlightedSection === 'looking_for') && 
+                  "ring-2 ring-neon-green shadow-[0_0_30px_rgba(167,243,208,0.3)]"
+                )}>
                 <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                   <MessageCircle className="w-4 h-4 text-blue-400" />
                   About Me
@@ -311,7 +310,13 @@ export const UserProfile = forwardRef<any, UserProfileProps>(({
 
             {/* Top Skills - Compact */}
             <GlassCard>
-              <div className="p-6">
+              <div 
+                ref={skillsRef}
+                className={cn(
+                  "p-6 transition-all duration-300",
+                  (highlightedSection === 'skills' || highlightedSection === 'interests') && 
+                  "ring-2 ring-neon-green shadow-[0_0_30px_rgba(167,243,208,0.3)]"
+                )}>
                 <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                   <Shield className="w-4 h-4 text-neon-green" />
                   Top Skills
