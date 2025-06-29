@@ -2,7 +2,6 @@
 
 import { 
   Building, 
-  Calendar, 
   Clock, 
   MapPin,
   Bookmark,
@@ -13,6 +12,7 @@ import {
 import Image from 'next/image';
 
 import { cn } from '@/lib/utils';
+import { DateDisplay } from '@/components/ui/DateDisplay';
 
 import { Project } from './DiscoverPage';
 
@@ -31,38 +31,6 @@ export function ProjectCard({
   onSave,
   onPass
 }: ProjectCardProps) {
-  // Calculate days until deadline
-  const daysLeft = project.application_deadline ? (() => {
-    const deadline = new Date(project.application_deadline);
-    const now = new Date();
-    const days = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return days;
-  })() : null;
-
-  // Format deadline
-  const formatDeadline = () => {
-    if (!project.application_deadline) {return 'Rolling basis';}
-    
-    const deadline = new Date(project.application_deadline);
-    const formatted = deadline.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric' 
-    });
-    
-    if (daysLeft === 0) {return `Due today`;}
-    if (daysLeft === 1) {return `Due tomorrow`;}
-    if (daysLeft && daysLeft < 0) {return `Closed`;}
-    if (daysLeft && daysLeft <= 7) {return `${formatted} (${daysLeft} days)`;}
-    return formatted;
-  };
-
-  const deadlineColor = () => {
-    if (!daysLeft) {return 'text-dark-muted';}
-    if (daysLeft <= 0) {return 'text-red-400';}
-    if (daysLeft <= 3) {return 'text-orange-400';}
-    if (daysLeft <= 7) {return 'text-yellow-400';}
-    return 'text-dark-muted';
-  };
 
   return (
     <div
@@ -119,12 +87,13 @@ export function ProjectCard({
 
         {/* Key Information */}
         <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
-          <div className="flex items-center gap-2">
-            <Calendar className={cn("h-4 w-4", deadlineColor())} />
-            <span className={deadlineColor()}>
-              {formatDeadline()}
-            </span>
-          </div>
+          <DateDisplay 
+            date={project.application_deadline}
+            format="deadline"
+            showIcon
+            fallback="Rolling basis"
+            className="col-span-1"
+          />
           
           <div className="flex items-center gap-2 text-dark-muted">
             <Clock className="h-4 w-4" />

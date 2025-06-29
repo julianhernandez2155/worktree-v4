@@ -1,17 +1,20 @@
 'use client';
 
 import { 
-  X, 
   Plus, 
   Calendar, 
   Lock, 
   Trash2,
   AlertCircle,
-  Sparkles
+  Sparkles,
+  X
 } from 'lucide-react';
 import { useState } from 'react';
 
-import { GlassCard } from '@/components/ui/GlassCard';
+import { Modal, ModalFooter } from '@/components/ui/Modal';
+import { SkillBadge } from '@/components/ui/SkillBadge';
+import { IconText } from '@/components/ui/IconText';
+import { FormField, FormTextarea } from '@/components/ui/FormField';
 import { NeonButton } from '@/components/ui/NeonButton';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
@@ -187,54 +190,55 @@ export function CreateProjectModal({ orgSlug, onClose, onProjectCreated }: Creat
     : 0;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <GlassCard className="w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-dark-border">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Create Internal Project</h2>
-            <p className="text-dark-muted mt-1">
-              Start with internal talent before going public
-            </p>
+    <Modal
+      open={true}
+      onClose={onClose}
+      title="Create Internal Project"
+      description="Start with internal talent before going public"
+      size="lg"
+      footer={
+        <ModalFooter>
+          <IconText
+            icon={Lock}
+            text="This project will be internal to your organization"
+            size="sm"
+            variant="muted"
+          />
+          <div className="flex items-center gap-3 ml-auto">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-dark-muted hover:text-white transition-colors"
+            >
+              Cancel
+            </button>
+            <NeonButton
+              onClick={handleCreate}
+              disabled={!projectName || !description || tasks.length === 0 || creating}
+              loading={creating}
+            >
+              Create Project
+            </NeonButton>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-dark-card rounded-lg transition-colors"
-          >
-            <X className="h-5 w-5 text-dark-muted" />
-          </button>
-        </div>
+        </ModalFooter>
+      }
+    >
+      <div className="space-y-6">
+        {/* Project Details */}
+        <div className="space-y-4">
+            <FormField
+              label="Project Name"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              placeholder="e.g., Spring Robotics Competition"
+            />
 
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-          {/* Project Details */}
-          <div className="space-y-4 mb-8">
-            <div>
-              <label className="block text-sm font-medium text-dark-muted mb-2">
-                Project Name
-              </label>
-              <input
-                type="text"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                placeholder="e.g., Spring Robotics Competition"
-                className="w-full px-4 py-2 bg-dark-card border border-dark-border rounded-lg 
-                         text-white placeholder-dark-muted focus:border-neon-green focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-dark-muted mb-2">
-                Description
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="What's this project about?"
-                rows={3}
-                className="w-full px-4 py-2 bg-dark-card border border-dark-border rounded-lg 
-                         text-white placeholder-dark-muted focus:border-neon-green focus:outline-none resize-none"
-              />
-            </div>
+            <FormTextarea
+              label="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What's this project about?"
+              rows={3}
+            />
 
             <div>
               <label className="block text-sm font-medium text-dark-muted mb-2">
@@ -287,17 +291,12 @@ export function CreateProjectModal({ orgSlug, onClose, onProjectCreated }: Creat
                     </div>
                     <div className="flex flex-wrap gap-2 mt-3">
                       {task.requiredSkills.map((skill) => (
-                        <span 
-                          key={skill} 
-                          className={cn(
-                            "px-2 py-1 text-xs rounded-full",
-                            (skillMatches[skill] || 0) > 0
-                              ? "bg-green-500/20 text-green-400"
-                              : "bg-red-500/20 text-red-400"
-                          )}
-                        >
-                          {skill} ({skillMatches[skill] || 0} members)
-                        </span>
+                        <SkillBadge
+                          key={skill}
+                          skill={`${skill} (${skillMatches[skill] || 0} members)`}
+                          variant={(skillMatches[skill] || 0) > 0 ? 'matched' : 'missing'}
+                          size="xs"
+                        />
                       ))}
                     </div>
                   </div>
@@ -310,22 +309,17 @@ export function CreateProjectModal({ orgSlug, onClose, onProjectCreated }: Creat
               <h4 className="font-medium text-white mb-3">Add New Task</h4>
               
               <div className="space-y-3">
-                <input
-                  type="text"
+                <FormField
                   value={currentTask.name}
                   onChange={(e) => setCurrentTask({ ...currentTask, name: e.target.value })}
                   placeholder="Task name"
-                  className="w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg 
-                           text-white placeholder-dark-muted focus:border-neon-green focus:outline-none"
                 />
                 
-                <textarea
+                <FormTextarea
                   value={currentTask.description}
                   onChange={(e) => setCurrentTask({ ...currentTask, description: e.target.value })}
                   placeholder="Task description"
                   rows={2}
-                  className="w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg 
-                           text-white placeholder-dark-muted focus:border-neon-green focus:outline-none resize-none"
                 />
                 
                 <div>
@@ -414,30 +408,6 @@ export function CreateProjectModal({ orgSlug, onClose, onProjectCreated }: Creat
             </div>
           )}
         </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-dark-border">
-          <div className="flex items-center gap-2 text-sm text-dark-muted">
-            <Lock className="h-4 w-4" />
-            <span>This project will be internal to your organization</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-dark-muted hover:text-white transition-colors"
-            >
-              Cancel
-            </button>
-            <NeonButton
-              onClick={handleCreate}
-              disabled={!projectName || !description || tasks.length === 0 || creating}
-              loading={creating}
-            >
-              Create Project
-            </NeonButton>
-          </div>
-        </div>
-      </GlassCard>
-    </div>
+    </Modal>
   );
 }

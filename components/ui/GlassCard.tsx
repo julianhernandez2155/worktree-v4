@@ -7,10 +7,10 @@ import { cn } from '@/lib/utils';
 
 interface GlassCardProps extends HTMLMotionProps<"div"> {
   children: ReactNode;
-  className?: string;
-  hover?: boolean;
-  glow?: 'green' | 'blue' | 'purple' | 'none';
-  variant?: 'default' | 'surface' | 'elevated';
+  className?: string | undefined;
+  hover?: boolean | undefined;
+  glow?: 'green' | 'blue' | 'purple' | 'none' | undefined;
+  variant?: 'default' | 'surface' | 'elevated' | undefined;
 }
 
 const glowStyles = {
