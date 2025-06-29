@@ -76,7 +76,7 @@ export function ProjectDetailModal({
             description,
             task_required_skills!task_id(
               importance,
-              skills!skill_id(name, category)
+              skills!task_required_skills_skill_id_fkey(name, category)
             )
           `)
           .eq('project_id', projectId);

@@ -91,7 +91,7 @@ export function MemberDirectory({ orgSlug }: MemberDirectoryProps) {
         .from('member_skills')
         .select(`
           user_id,
-          skill:skills!skill_id(name)
+          skills!member_skills_skill_id_fkey(name)
         `)
         .in('user_id', memberIds);
 
@@ -100,8 +100,8 @@ export function MemberDirectory({ orgSlug }: MemberDirectoryProps) {
         if (!acc[ms.user_id]) {
           acc[ms.user_id] = [];
         }
-        if (ms.skill?.name) {
-          acc[ms.user_id].push(ms.skill.name);
+        if (ms.skills?.name) {
+          acc[ms.user_id].push(ms.skills.name);
         }
         return acc;
       }, {} as Record<string, string[]>) || {};

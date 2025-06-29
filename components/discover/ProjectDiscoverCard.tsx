@@ -320,10 +320,10 @@ export function ProjectDiscoverCard({ project, onSave, onApply }: ProjectDiscove
               </div>
 
               {/* Social Proof */}
-              {(project.interested_count > 0 || project.recent_activity) && (
+              {((project.interested_count ?? 0) > 0 || project.recent_activity) && (
                 <div className="text-sm text-neon-green flex items-center gap-1">
                   <div className="h-2 w-2 bg-neon-green rounded-full animate-pulse" />
-                  {project.interested_count > 5 
+                  {(project.interested_count ?? 0) > 5 
                     ? `${project.interested_count} students interested`
                     : project.recent_activity || '2 students viewing now'
                   }

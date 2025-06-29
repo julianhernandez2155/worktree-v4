@@ -173,7 +173,7 @@ export function NaturalLanguageTaskInput({
             .from('organization_members')
             .select(`
               user_id,
-              user:profiles!user_id(
+              profiles!organization_members_user_id_fkey(
                 full_name
               )
             `)
@@ -186,7 +186,7 @@ export function NaturalLanguageTaskInput({
 
           // Filter members whose names match
           const matchingMembers = members?.filter(m => 
-            matchedAssignees.includes(m.user?.full_name)
+            matchedAssignees.includes(m.profiles?.full_name)
           ) || [];
 
           if (matchingMembers.length > 0) {

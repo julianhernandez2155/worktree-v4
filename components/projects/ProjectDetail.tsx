@@ -136,7 +136,7 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
           assignee_id,
           is_primary,
           assigned_at,
-          assignee:profiles!assignee_id (
+          profiles!task_assignees_assignee_id_fkey (
             id,
             full_name,
             username,
@@ -150,12 +150,12 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
       // Group assignees by task
       const assigneesByTask = assigneesData?.reduce((acc: any, item) => {
         if (!acc[item.task_id]) {acc[item.task_id] = [];}
-        if (item.assignee) {
+        if (item.profiles) {
           acc[item.task_id].push({
-            id: item.assignee.id,
-            full_name: item.assignee.full_name,
-            username: item.assignee.username,
-            avatar_url: item.assignee.avatar_url,
+            id: item.profiles.id,
+            full_name: item.profiles.full_name,
+            username: item.profiles.username,
+            avatar_url: item.profiles.avatar_url,
             is_primary: item.is_primary
           });
         }
@@ -175,7 +175,7 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
         const { data: membersData } = await supabase
           .from('organization_members')
           .select(`
-            user:profiles!user_id(
+            profiles!organization_members_user_id_fkey(
               full_name
             )
           `)
@@ -183,7 +183,7 @@ export function ProjectDetail({ orgSlug, projectId }: ProjectDetailProps) {
 
         if (membersData) {
           const names = membersData
-            .map(m => m.user?.full_name)
+            .map(m => m.profiles?.full_name)
             .filter(Boolean) as string[];
           setMemberNames(names);
         }
