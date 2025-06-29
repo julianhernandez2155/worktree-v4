@@ -20,11 +20,12 @@ import {
   Briefcase,
   Award,
   FileText,
-  Building,
-  Globe
+  Globe,
+  User,
+  BookOpen
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, usePathname, useParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 import { createClient } from '@/lib/supabase/client';
@@ -46,7 +47,14 @@ interface ContextSidebarProps {
 }
 
 // Navigation items for different contexts
-const orgNavigation = [
+type NavItem = {
+  name: string;
+  href: string;
+  icon: any;
+  isGlobal?: boolean;
+};
+
+const orgNavigation: NavItem[] = [
   { name: 'Dashboard', href: '', icon: Home },
   { name: 'My Tasks', href: '/my-tasks', icon: CheckSquare },
   { name: 'Members', href: '/members', icon: Users },
@@ -57,14 +65,14 @@ const orgNavigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
-const discoverNavigation = [
+const discoverNavigation: NavItem[] = [
   { name: 'For You', href: '/discover', icon: Compass },
   { name: 'All Projects', href: '/discover/all-projects', icon: Grid3x3 },
   { name: 'Saved', href: '/discover/saved', icon: Bookmark },
   { name: 'Applied', href: '/discover/applied', icon: CheckSquare },
 ];
 
-const portfolioNavigation = [
+const portfolioNavigation: NavItem[] = [
   { name: 'Overview', href: '/portfolio', icon: Briefcase },
   { name: 'Projects', href: '/portfolio/projects', icon: FolderOpen },
   { name: 'Skills', href: '/portfolio/skills', icon: BarChart3 },
@@ -72,20 +80,26 @@ const portfolioNavigation = [
   { name: 'Resume', href: '/portfolio/resume', icon: FileText },
 ];
 
-const defaultNavigation = [
+const profileNavigation: NavItem[] = [
+  { name: 'Overview', href: '', icon: User },
+  { name: 'Experience', href: '?tab=experience', icon: Briefcase },
+  { name: 'Skills', href: '?tab=skills', icon: Award },
+  { name: 'Portfolio', href: '?tab=portfolio', icon: BookOpen },
+  { name: 'Edit Profile', href: '/dashboard/profile/edit', icon: Settings, isGlobal: true },
+];
+
+const defaultNavigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
+  { name: 'My Profile', href: '/dashboard/profile', icon: User },
   { name: 'My Tasks', href: '/dashboard/tasks', icon: CheckSquare },
-  { name: 'Portfolio', href: '/portfolio', icon: Briefcase },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
 export function ContextSidebar({ collapsed, onToggle, isMobile = false }: ContextSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const params = useParams();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [currentOrg, setCurrentOrg] = useState<Organization | null>(null);
-  const [showCreateOrg, setShowCreateOrg] = useState(false);
   const supabase = createClient();
 
   const orgSlug = pathname.split('/')[3]; // /dashboard/org/[slug]
@@ -174,6 +188,8 @@ export function ContextSidebar({ collapsed, onToggle, isMobile = false }: Contex
       return discoverNavigation;
     } else if (pathname.startsWith('/portfolio')) {
       return portfolioNavigation;
+    } else if (pathname.startsWith('/u/')) {
+      return profileNavigation;
     }
     return defaultNavigation;
   };
@@ -199,7 +215,8 @@ export function ContextSidebar({ collapsed, onToggle, isMobile = false }: Contex
               >
                 {pathname.includes('/dashboard/org/') ? 'Organization' : 
                  pathname.startsWith('/discover') ? 'Discover' :
-                 pathname.startsWith('/portfolio') ? 'Portfolio' : 'Menu'}
+                 pathname.startsWith('/portfolio') ? 'Portfolio' :
+                 pathname.startsWith('/u/') ? 'Profile' : 'Menu'}
               </motion.h3>
             )}
           </AnimatePresence>
@@ -296,7 +313,7 @@ export function ContextSidebar({ collapsed, onToggle, isMobile = false }: Contex
 
             {/* Create organization button */}
             <button
-              onClick={() => setShowCreateOrg(true)}
+              onClick={() => router.push('/dashboard/org/create')}
               className={cn(
                 'w-full group rounded-lg border-2 border-dashed border-dark-border hover:border-neon-green/50 transition-all duration-200',
                 collapsed && !isMobile ? 'p-2' : 'p-3'
@@ -343,13 +360,46 @@ export function ContextSidebar({ collapsed, onToggle, isMobile = false }: Contex
         </AnimatePresence>
 
         {navigation.map((item) => {
-          const href = item.isGlobal 
-            ? item.href 
-            : currentOrg && showOrgSection
-              ? `/dashboard/org/${currentOrg.slug}${item.href}`
-              : item.href;
+          let href = item.href;
+          
+          // Handle different navigation contexts
+          if (item.isGlobal) {
+            // Global links use their href as-is
+            href = item.href;
+          } else if (pathname.startsWith('/u/')) {
+            // Profile pages use the current pathname as base
+            const username = pathname.split('/')[2];
+            href = item.href.startsWith('?') ? `/u/${username}${item.href}` : `/u/${username}${item.href}`;
+          } else if (currentOrg && showOrgSection) {
+            // Org pages use org slug
+            href = `/dashboard/org/${currentOrg.slug}${item.href}`;
+          }
+          
           const Icon = item.icon;
-          const isActive = pathname === href;
+          
+          // Check if item is active
+          let isActive = false;
+          if (item.href.startsWith('?')) {
+            // For query params, check if current URL matches
+            if (typeof window !== 'undefined') {
+              const currentQuery = new URLSearchParams(window.location.search);
+              const itemQuery = new URLSearchParams(item.href);
+              isActive = pathname === href.split('?')[0] && 
+                        currentQuery.get('tab') === itemQuery.get('tab');
+            }
+          } else {
+            isActive = pathname === href;
+          }
+          
+          // Special case for overview tab on profile pages
+          if (pathname.startsWith('/u/') && item.name === 'Overview') {
+            if (typeof window !== 'undefined' && !window.location.search) {
+              isActive = true;
+            } else if (typeof window === 'undefined') {
+              // During SSR, assume overview is active if no query params
+              isActive = true;
+            }
+          }
           
           return (
             <Link
