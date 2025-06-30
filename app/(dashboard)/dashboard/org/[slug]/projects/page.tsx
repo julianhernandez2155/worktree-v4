@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 
-import { ProjectsView } from '@/components/projects/ProjectsView';
+import { ProjectsHub } from '@/components/projects/ProjectsHub';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 interface ProjectsPageProps {
@@ -11,8 +11,10 @@ export default async function ProjectsPage({ params }: ProjectsPageProps) {
   const { slug } = await params;
 
   return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <ProjectsView orgSlug={slug} />
-    </Suspense>
+    <div className="h-[calc(100vh-12rem)]">
+      <Suspense fallback={<LoadingSpinner />}>
+        <ProjectsHub orgSlug={slug} />
+      </Suspense>
+    </div>
   );
 }
