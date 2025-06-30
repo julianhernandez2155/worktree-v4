@@ -1,362 +1,303 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, memo } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { useDebounce, useVirtualList } from '@/lib/hooks/usePerformance';
-import { ProjectCard } from './ProjectCard.optimized';
-import { FilterPills } from './revolutionary/FilterPills';
+import { 
+  Search, 
+  Clock,
+  Sparkles,
+  Bell,
+  Zap
+} from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { Sparkles } from 'lucide-react';
+import { NeonButton } from '@/components/ui/NeonButton';
+import { useDebounce } from '@/lib/hooks/useDebounce';
+import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
 
-interface Project {
-  id: string;
-  name: string;
-  organization: {
-    name: string;
-    slug: string;
-    verified?: boolean;
-  };
-  public_description?: string;
-  commitment_level?: string;
-  is_saved?: boolean;
-  has_applied?: boolean;
-  match_score?: number;
-  matched_skills?: string[];
-  missing_skills?: string[];
-  skills_to_develop?: string[];
-}
+import { ProjectApplicationModal } from './ProjectApplicationModal';
+import { ProjectDetailModal } from './ProjectDetailModal';
+import { ProjectDiscoverCard } from './ProjectDiscoverCard';
 
-/**
- * Optimized Discover Feed Component
- * Implements virtualization, memoization, and efficient re-rendering
- */
-export const DiscoverFeed = memo(() => {
-  const [projects, setProjects] = useState<Project[]>([]);
+export function DiscoverFeed() {
+  const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedFilter, setSelectedFilter] = useState('for-you');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [userSkills, setUserSkills] = useState<string[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'for-you' | 'low-commitment' | 'deadline-soon'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   
   const supabase = createClient();
-  const debouncedSearch = useDebounce(searchQuery, 300);
+  const debouncedSearch = useDebounce(searchTerm, 300);
+  const LIMIT = 20;
 
-  // Load user skills once
+  // Get current user
   useEffect(() => {
-    loadUserSkills();
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    };
+    getUser();
   }, []);
 
-  // Load projects when filter changes
-  useEffect(() => {
-    loadProjects();
-  }, [selectedFilter]);
-
-  // Search when debounced query changes
-  useEffect(() => {
-    if (debouncedSearch) {
-      searchProjects();
-    } else if (selectedFilter !== 'for-you') {
-      loadProjects();
-    }
-  }, [debouncedSearch]);
-
-  // Memoized function to load user skills
-  const loadUserSkills = useCallback(async () => {
+  // Fetch projects using the optimized RPC function
+  const fetchProjects = async (reset = false) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data } = await supabase
-        .from('member_skills')
-        .select('skills!member_skills_skill_id_fkey(name)')
-        .eq('user_id', user.id);
-
-      const skills = data?.map(item => item.skills.name) || [];
-      setUserSkills(skills);
-    } catch (error) {
-      console.error('Error loading user skills:', error);
-    }
-  }, [supabase]);
-
-  // Memoized function to calculate match score
-  const calculateMatchScore = useCallback((
-    projectSkills: string[], 
-    userSkillList: string[]
-  ): number => {
-    if (!projectSkills.length || !userSkillList.length) return 0;
-    
-    const matchedCount = projectSkills.filter(skill => 
-      userSkillList.includes(skill)
-    ).length;
-    
-    return Math.round((matchedCount / projectSkills.length) * 100);
-  }, []);
-
-  // Memoized function to load projects
-  const loadProjects = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Load projects based on filter
-      let query = supabase
-        .from('internal_projects')
-        .select(`
-          id,
-          name,
-          public_description,
-          commitment_level,
-          organizations!internal_projects_organization_id_fkey(
-            name,
-            slug,
-            verified
-          )
-        `)
-        .eq('is_public', true)
-        .eq('status', 'active');
-
-      if (selectedFilter === 'trending') {
-        query = query.order('application_count', { ascending: false });
-      } else if (selectedFilter === 'closing-soon') {
-        query = query.order('application_deadline', { ascending: true });
+      if (reset) {
+        setLoading(true);
+        setOffset(0);
+      } else {
+        setLoadingMore(true);
       }
 
-      const { data: projectsData, error } = await query.limit(50);
-      if (error) throw error;
+      const currentOffset = reset ? 0 : offset;
 
-      // Process projects with skills
-      const processedProjects = await processProjectsWithSkills(
-        projectsData || [], 
-        userSkills
-      );
-
-      // Apply filter-specific sorting
-      let sortedProjects = [...processedProjects];
-      if (selectedFilter === 'for-you') {
-        sortedProjects = sortedProjects
-          .filter(p => (p.match_score || 0) >= 50)
-          .sort((a, b) => (b.match_score || 0) - (a.match_score || 0))
-          .slice(0, 4);
-      }
-
-      setProjects(sortedProjects);
-    } catch (error) {
-      console.error('Error loading projects:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedFilter, userSkills, supabase, calculateMatchScore]);
-
-  // Memoized function to process projects with skills
-  const processProjectsWithSkills = useCallback(async (
-    projectsList: any[], 
-    userSkillList: string[]
-  ): Promise<Project[]> => {
-    // Batch load all task skills
-    const projectIds = projectsList.map(p => p.id);
-    const { data: taskSkills } = await supabase
-      .from('contributions')
-      .select(`
-        project_id,
-        task_required_skills!contributions_id_fkey(
-          skills!task_required_skills_skill_id_fkey(name)
-        )
-      `)
-      .in('project_id', projectIds);
-
-    // Create skill map
-    const skillsByProject = taskSkills?.reduce((acc, task) => {
-      if (!acc[task.project_id]) {
-        acc[task.project_id] = new Set();
-      }
-      task.task_required_skills?.forEach((trs: any) => {
-        if (trs.skills?.name) {
-          acc[task.project_id].add(trs.skills.name);
-        }
+      // Use the new RPC function that fetches everything in one query!
+      const { data, error } = await supabase.rpc('get_projects_with_skills_and_status', {
+        p_user_id: currentUser?.id || null,
+        p_limit: LIMIT,
+        p_offset: currentOffset,
+        p_search: debouncedSearch || null,
+        p_max_hours: selectedFilter === 'low-commitment' ? 5 : null,
+        p_deadline_soon: selectedFilter === 'deadline-soon'
       });
-      return acc;
-    }, {} as Record<string, Set<string>>) || {};
-
-    // Process each project
-    return projectsList.map(project => {
-      const projectSkills = Array.from(skillsByProject[project.id] || []);
-      const matchedSkills = projectSkills.filter(skill => userSkillList.includes(skill));
-      const missingSkills = projectSkills.filter(skill => !userSkillList.includes(skill));
-      const matchScore = calculateMatchScore(projectSkills, userSkillList);
-
-      return {
-        id: project.id,
-        name: project.name,
-        organization: project.organizations,
-        public_description: project.public_description,
-        commitment_level: project.commitment_level,
-        match_score: matchScore,
-        matched_skills: matchedSkills,
-        missing_skills: missingSkills,
-        skills_to_develop: missingSkills.slice(0, 3),
-      };
-    });
-  }, [supabase, calculateMatchScore]);
-
-  // Memoized search function
-  const searchProjects = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('internal_projects')
-        .select(`
-          id,
-          name,
-          public_description,
-          commitment_level,
-          organizations!internal_projects_organization_id_fkey(
-            name,
-            slug,
-            verified
-          )
-        `)
-        .eq('is_public', true)
-        .ilike('name', `%${debouncedSearch}%`)
-        .limit(20);
 
       if (error) throw error;
 
-      const processedProjects = await processProjectsWithSkills(
-        data || [], 
-        userSkills
-      );
-      setProjects(processedProjects);
+      // Transform the data to match the existing component interface
+      const transformedProjects = (data || []).map((p: any) => ({
+        id: p.project_id,
+        name: p.project_name,
+        public_description: p.public_description,
+        organization_id: p.organization_id,
+        organization: {
+          name: p.organization_name,
+          slug: p.organization_slug,
+          logo_url: p.organization_logo,
+          verified: p.organization_verified
+        },
+        required_commitment_hours: p.required_commitment_hours,
+        application_deadline: p.application_deadline,
+        application_count: p.application_count,
+        is_saved: p.is_saved,
+        has_applied: p.has_applied,
+        application_status: p.application_status,
+        match_score: p.match_score,
+        matched_skills: p.matched_skills,
+        missing_skills: p.missing_skills,
+        required_skills: p.required_skills,
+        preferred_skills: p.preferred_skills,
+        created_at: p.created_at
+      }));
+
+      // Filter for "for-you" mode (high match scores)
+      const filteredProjects = selectedFilter === 'for-you' 
+        ? transformedProjects.filter((p: any) => p.match_score >= 50)
+        : transformedProjects;
+
+      if (reset) {
+        setProjects(filteredProjects);
+      } else {
+        setProjects(prev => [...prev, ...filteredProjects]);
+      }
+
+      setOffset(currentOffset + LIMIT);
+      setHasMore(data?.length === LIMIT);
+
     } catch (error) {
-      console.error('Error searching projects:', error);
+      console.error('Error fetching projects:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [debouncedSearch, userSkills, supabase, processProjectsWithSkills]);
+  };
 
-  // Memoized save handler
-  const handleSaveProject = useCallback(async (projectId: string) => {
+  // Initial load and filter changes
+  useEffect(() => {
+    fetchProjects(true);
+  }, [currentUser, selectedFilter, debouncedSearch]);
+
+  // Handle save toggle with optimistic update
+  const handleToggleSave = async (projectId: string) => {
+    if (!currentUser) return;
+
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    // Optimistic update
+    setProjects(prev => 
+      prev.map(p => 
+        p.id === projectId 
+          ? { ...p, is_saved: !p.is_saved }
+          : p
+      )
+    );
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const project = projects.find(p => p.id === projectId);
-      if (!project) return;
-
       if (project.is_saved) {
-        // Unsave
         await supabase
           .from('saved_projects')
           .delete()
-          .eq('user_id', user.id)
+          .eq('user_id', currentUser.id)
           .eq('project_id', projectId);
       } else {
-        // Save
         await supabase
           .from('saved_projects')
-          .insert({ user_id: user.id, project_id: projectId });
+          .insert({
+            user_id: currentUser.id,
+            project_id: projectId
+          });
       }
-
-      // Update local state
-      setProjects(prev => prev.map(p => 
-        p.id === projectId ? { ...p, is_saved: !p.is_saved } : p
-      ));
     } catch (error) {
-      console.error('Error saving project:', error);
+      console.error('Error toggling save:', error);
+      // Revert on error
+      setProjects(prev => 
+        prev.map(p => 
+          p.id === projectId 
+            ? { ...p, is_saved: project.is_saved }
+            : p
+        )
+      );
     }
-  }, [projects, supabase]);
+  };
 
-  // Memoized apply handler
-  const handleApplyProject = useCallback(async (projectId: string) => {
-    // Implementation for apply functionality
-    console.log('Apply to project:', projectId);
-  }, []);
+  const handleLoadMore = () => {
+    if (!loadingMore && hasMore) {
+      fetchProjects(false);
+    }
+  };
 
-  // Filtered projects based on search
-  const displayedProjects = useMemo(() => {
-    if (!debouncedSearch) return projects;
-    
-    const query = debouncedSearch.toLowerCase();
-    return projects.filter(project =>
-      project.name.toLowerCase().includes(query) ||
-      project.organization.name.toLowerCase().includes(query) ||
-      project.public_description?.toLowerCase().includes(query)
-    );
-  }, [projects, debouncedSearch]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <LoadingSpinner />
-      </div>
-    );
-  }
+  const filters = [
+    { id: 'all', label: 'All Projects', icon: Zap },
+    { id: 'for-you', label: 'For You', icon: Sparkles },
+    { id: 'low-commitment', label: 'Low Commitment', icon: Clock },
+    { id: 'deadline-soon', label: 'Deadline Soon', icon: Bell },
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">
-          Discover Projects
-        </h1>
-        <p className="text-gray-400">
-          Find the perfect opportunity to grow your skills
-        </p>
-      </div>
-
       {/* Search Bar */}
-      <div className="max-w-2xl mx-auto mb-6">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-dark-muted" />
         <input
           type="text"
-          placeholder="Search projects..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-lg
-                   text-white placeholder-gray-500 focus:outline-none focus:ring-2
-                   focus:ring-neon-green/50 transition-all"
+          placeholder="Search projects by name or description..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 pr-4 py-3 bg-dark-surface border border-dark-border rounded-lg 
+                   text-white placeholder-dark-muted focus:outline-none focus:border-neon-green/50 
+                   transition-colors"
         />
       </div>
 
-      {/* Filter Pills */}
-      <div className="flex justify-center mb-8">
-        <FilterPills
-          selectedFilter={selectedFilter}
-          onFilterChange={setSelectedFilter}
-          showPerfectMatch={true}
-        />
+      {/* Filter Tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        {filters.map(filter => (
+          <button
+            key={filter.id}
+            onClick={() => setSelectedFilter(filter.id as any)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg border transition-all whitespace-nowrap",
+              selectedFilter === filter.id
+                ? "bg-neon-green/20 border-neon-green text-neon-green"
+                : "bg-dark-surface border-dark-border text-dark-muted hover:text-white"
+            )}
+          >
+            <filter.icon className="h-4 w-4" />
+            {filter.label}
+          </button>
+        ))}
       </div>
 
       {/* Projects Grid */}
-      {displayedProjects.length === 0 ? (
-        <EmptyState
-          icon={Sparkles}
-          title={selectedFilter === 'for-you' ? "No perfect matches found" : "No projects found"}
-          description={
-            selectedFilter === 'for-you'
-              ? "We couldn't find projects that match your skills perfectly. Try exploring all projects!"
-              : "Try adjusting your search or filters"
-          }
-          action={selectedFilter === 'for-you' ? {
-            label: "Browse All Projects",
-            onClick: () => setSelectedFilter('all')
-          } : undefined}
-        />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayedProjects.map((project, index) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              index={index}
-              delay={index * 0.05}
-              onSave={handleSaveProject}
-              onApply={handleApplyProject}
-            />
-          ))}
+      {loading && projects.length === 0 ? (
+        <div className="flex justify-center py-12">
+          <LoadingSpinner size="lg" />
         </div>
+      ) : projects.length === 0 ? (
+        <GlassCard className="p-12 text-center">
+          <Sparkles className="h-12 w-12 text-dark-muted mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">No projects found</h3>
+          <p className="text-dark-muted">
+            {searchTerm 
+              ? "Try adjusting your search terms"
+              : selectedFilter === 'for-you'
+              ? "We couldn't find projects matching your skills. Try browsing all projects!"
+              : "Check back later for new opportunities"}
+          </p>
+        </GlassCard>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map(project => (
+              <ProjectDiscoverCard
+                key={project.id}
+                project={project}
+                currentUser={currentUser}
+                onToggleSave={handleToggleSave}
+                onViewDetails={() => {
+                  setSelectedProject(project);
+                  setShowDetailModal(true);
+                }}
+                onApply={() => {
+                  setSelectedProject(project);
+                  setShowApplicationModal(true);
+                }}
+                showPerfectMatch={selectedFilter === 'for-you'}
+              />
+            ))}
+          </div>
+
+          {/* Load More */}
+          {hasMore && (
+            <div className="flex justify-center pt-8">
+              <NeonButton
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                loading={loadingMore}
+                variant="secondary"
+              >
+                Load More Projects
+              </NeonButton>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Modals */}
+      {selectedProject && (
+        <>
+          <ProjectDetailModal
+            project={selectedProject}
+            open={showDetailModal}
+            onClose={() => setShowDetailModal(false)}
+            onApply={() => {
+              setShowDetailModal(false);
+              setShowApplicationModal(true);
+            }}
+          />
+          
+          <ProjectApplicationModal
+            project={selectedProject}
+            open={showApplicationModal}
+            onClose={() => {
+              setShowApplicationModal(false);
+              setSelectedProject(null);
+            }}
+            onSuccess={() => {
+              setShowApplicationModal(false);
+              setSelectedProject(null);
+              fetchProjects(true); // Refresh to update application status
+            }}
+          />
+        </>
       )}
     </div>
   );
-});
-
-DiscoverFeed.displayName = 'DiscoverFeed';
+}

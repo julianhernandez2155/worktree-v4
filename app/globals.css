@@ -275,4 +275,29 @@
   .transition-smooth {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+
+  /* Sidebar-specific animations */
+  .sidebar-group-transition {
+    transition: height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebar-item-hover {
+    transition: all 0.15s ease-out;
+  }
+
+  /* Custom focus states for accessibility */
+  .focus-visible-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-green/50 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-bg;
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .sidebar-group-transition {
+      transition: none;
+    }
+    
+    .sidebar-item-hover {
+      transition: none;
+    }
+  }
 }

@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 import { CommandPalette } from '@/components/ui/CommandPalette';
 import { cn } from '@/lib/utils';
 import { SidebarProvider } from '@/lib/contexts/SidebarContext';
 
 import { ContextSidebar } from './ContextSidebar';
+import { OrgContextSidebar } from './org/OrgContextSidebar';
+import { PersonalSidebar } from './PersonalSidebar';
 import { TopNavBar } from './TopNavBar';
 
 interface PersistentLayoutProps {
@@ -17,6 +20,23 @@ export function PersistentLayout({ children }: PersistentLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const pathname = usePathname();
+  
+  // Determine which sidebar to show based on the current "world"
+  const getSidebarType = () => {
+    if (pathname.includes('/dashboard/org/')) {
+      return 'organization';
+    } else if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+      return 'personal';
+    } else if (pathname.startsWith('/discover')) {
+      return 'discover';
+    } else if (pathname.startsWith('/u/')) {
+      return 'profile';
+    }
+    return 'default';
+  };
+  
+  const sidebarType = getSidebarType();
 
   // Keyboard shortcut for command palette
   useEffect(() => {
@@ -48,10 +68,24 @@ export function PersistentLayout({ children }: PersistentLayoutProps) {
               sidebarOpen ? 'w-72' : 'w-20'
             )}
           >
-            <ContextSidebar
-              collapsed={!sidebarOpen}
-              onToggle={() => setSidebarOpen(!sidebarOpen)}
-            />
+            {sidebarType === 'organization' && (
+              <OrgContextSidebar
+                collapsed={!sidebarOpen}
+                onToggle={() => setSidebarOpen(!sidebarOpen)}
+              />
+            )}
+            {sidebarType === 'personal' && (
+              <PersonalSidebar
+                collapsed={!sidebarOpen}
+                onToggle={() => setSidebarOpen(!sidebarOpen)}
+              />
+            )}
+            {(sidebarType === 'discover' || sidebarType === 'profile' || sidebarType === 'default') && (
+              <ContextSidebar
+                collapsed={!sidebarOpen}
+                onToggle={() => setSidebarOpen(!sidebarOpen)}
+              />
+            )}
           </div>
 
           {/* Mobile Sidebar Overlay */}
@@ -59,11 +93,27 @@ export function PersistentLayout({ children }: PersistentLayoutProps) {
             <div className="lg:hidden fixed inset-0 z-50 flex">
               <div className="fixed inset-0 bg-black/50" onClick={() => setMobileSidebarOpen(false)} />
               <div className="relative flex w-72">
-                <ContextSidebar
-                  collapsed={false}
-                  onToggle={() => setMobileSidebarOpen(false)}
-                  isMobile
-                />
+                {sidebarType === 'organization' && (
+                  <OrgContextSidebar
+                    collapsed={false}
+                    onToggle={() => setMobileSidebarOpen(false)}
+                    isMobile
+                  />
+                )}
+                {sidebarType === 'personal' && (
+                  <PersonalSidebar
+                    collapsed={false}
+                    onToggle={() => setMobileSidebarOpen(false)}
+                    isMobile
+                  />
+                )}
+                {(sidebarType === 'discover' || sidebarType === 'profile' || sidebarType === 'default') && (
+                  <ContextSidebar
+                    collapsed={false}
+                    onToggle={() => setMobileSidebarOpen(false)}
+                    isMobile
+                  />
+                )}
               </div>
             </div>
           )}

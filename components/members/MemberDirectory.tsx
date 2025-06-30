@@ -34,6 +34,18 @@ interface Member {
   joined_at: string;
 }
 
+interface MemberWithSkillsRPC {
+  member_id: string;
+  user_id: string;
+  role: string;
+  joined_at: string;
+  full_name: string;
+  avatar_url: string | null;
+  year_of_study: string | null;
+  major: string | null;
+  skills: string[];
+}
+
 interface MemberDirectoryProps {
   orgSlug: string;
 }
@@ -48,11 +60,20 @@ export function MemberDirectory({ orgSlug }: MemberDirectoryProps) {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(false);
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const supabase = createClient();
+
+  // Debounce search query to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     loadMembers();
-  }, [orgSlug]);
+  }, [orgSlug, debouncedSearchQuery]);
 
   const loadMembers = async () => {
     try {
@@ -66,56 +87,26 @@ export function MemberDirectory({ orgSlug }: MemberDirectoryProps) {
       if (!orgData) {throw new Error('Organization not found');}
       setOrganization(orgData);
 
-      // Get members with their profiles
+      // Use optimized RPC function to get members with skills in one query
       const { data: memberData, error } = await supabase
-        .from('organization_members')
-        .select(`
-          role,
-          joined_at,
-          user:profiles!inner (
-            id,
-            full_name,
-            avatar_url,
-            year_of_study,
-            major
-          )
-        `)
-        .eq('organization_id', orgData.id)
-        .order('joined_at', { ascending: false });
+        .rpc('get_organization_members_with_skills', {
+          p_org_id: orgData.id,
+          p_search: debouncedSearchQuery || null
+        });
 
       if (error) {throw error;}
 
-      // Now fetch skills for each member from member_skills table
-      const memberIds = memberData?.map(m => m.user.id) || [];
-      const { data: memberSkillsData } = await supabase
-        .from('member_skills')
-        .select(`
-          user_id,
-          skills!member_skills_skill_id_fkey(name)
-        `)
-        .in('user_id', memberIds);
-
-      // Create a map of user_id to skills array
-      const userSkillsMap = memberSkillsData?.reduce((acc, ms) => {
-        if (!acc[ms.user_id]) {
-          acc[ms.user_id] = [];
-        }
-        if (ms.skills?.name) {
-          acc[ms.user_id].push(ms.skills.name);
-        }
-        return acc;
-      }, {} as Record<string, string[]>) || {};
-
       // Map the data to the correct Member interface structure
-      const formattedMembers: Member[] = (memberData || []).map(item => {
-        // Handle the case where user might be null or undefined
-        const userProfile = item.user as any;
-        const userId = userProfile?.id || '';
+      const formattedMembers: Member[] = ((memberData as MemberWithSkillsRPC[]) || []).map(item => {
         return {
-          id: userId,
+          id: item.user_id,
           user: {
-            ...userProfile,
-            skills: userSkillsMap[userId] || []
+            id: item.user_id,
+            full_name: item.full_name,
+            avatar_url: item.avatar_url,
+            year_of_study: item.year_of_study,
+            major: item.major,
+            skills: item.skills || []
           },
           role: item.role,
           joined_at: item.joined_at
@@ -139,24 +130,17 @@ export function MemberDirectory({ orgSlug }: MemberDirectoryProps) {
     return Array.from(skills).sort();
   }, [members]);
 
-  // Filter members based on search and selected skills
+  // Filter members based on selected skills (text search is handled server-side)
   const filteredMembers = useMemo(() => {
+    if (selectedSkills.length === 0) {
+      return members;
+    }
+    
     return members.filter(member => {
-      // Text search
-      const searchLower = searchQuery.toLowerCase();
-      const matchesSearch = !searchQuery || 
-        member.user?.full_name?.toLowerCase().includes(searchLower) ||
-        member.role?.toLowerCase().includes(searchLower) ||
-        member.user?.major?.toLowerCase().includes(searchLower) ||
-        member.user?.skills?.some(skill => skill.toLowerCase().includes(searchLower));
-
-      // Skill filter
-      const matchesSkills = selectedSkills.length === 0 ||
-        selectedSkills.every(skill => member.user?.skills?.includes(skill));
-
-      return matchesSearch && matchesSkills;
+      // Skill filter - member must have all selected skills
+      return selectedSkills.every(skill => member.user?.skills?.includes(skill));
     });
-  }, [members, searchQuery, selectedSkills]);
+  }, [members, selectedSkills]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -201,7 +185,7 @@ export function MemberDirectory({ orgSlug }: MemberDirectoryProps) {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by name, role, major, or skills..."
+                placeholder="Search by name or major..."
                 className="w-full pl-10 pr-4 py-3 bg-dark-surface border border-dark-border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neon-green/50 focus:ring-1 focus:ring-neon-green/20 transition-colors"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
