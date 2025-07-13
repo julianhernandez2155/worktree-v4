@@ -6,21 +6,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { PriorityIcon, PRIORITY_OPTIONS as PRIORITY_CONFIG } from '@/components/ui/PriorityIcon';
 
 interface InlinePriorityEditorProps {
   projectId: string;
   currentPriority?: string;
   onUpdate: (newPriority: string) => void;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-const PRIORITY_OPTIONS = [
-  { value: 'critical', label: 'Critical', color: 'text-red-400', bg: 'bg-red-400/10', dot: 'bg-red-400' },
-  { value: 'high', label: 'High', color: 'text-orange-400', bg: 'bg-orange-400/10', dot: 'bg-orange-400' },
-  { value: 'medium', label: 'Medium', color: 'text-yellow-400', bg: 'bg-yellow-400/10', dot: 'bg-yellow-400' },
-  { value: 'low', label: 'Low', color: 'text-gray-400', bg: 'bg-gray-400/10', dot: 'bg-gray-400' }
-];
+// Map the imported options to match the expected format
+const PRIORITY_OPTIONS = PRIORITY_CONFIG.filter(opt => opt.value !== null).map(opt => ({
+  value: opt.value,
+  label: opt.label,
+  color: opt.color,
+  bg: `${opt.bgColor}/10`
+}));
 
-export function InlinePriorityEditor({ projectId, currentPriority, onUpdate }: InlinePriorityEditorProps) {
+export function InlinePriorityEditor({ projectId, currentPriority, onUpdate, size = 'sm' }: InlinePriorityEditorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -67,13 +70,48 @@ export function InlinePriorityEditor({ projectId, currentPriority, onUpdate }: I
 
   if (!currentPriority || !currentOption) {
     return (
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsOpen(!isOpen);
-        }}
-        className="w-2 h-2 rounded-full bg-gray-600 hover:ring-2 hover:ring-gray-400/50 hover:ring-offset-2 hover:ring-offset-dark-bg transition-all"
-      />
+      <div ref={dropdownRef} className="relative flex items-center">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsOpen(!isOpen);
+          }}
+          className="p-1 rounded transition-all hover:bg-dark-surface focus:outline-none focus:ring-2 focus:ring-neon-green/50"
+        >
+          <PriorityIcon priority={null} size={size} />
+        </button>
+        
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="absolute top-full mt-1 left-0 w-32 bg-dark-card border border-dark-border rounded-lg shadow-xl z-20 py-1"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {PRIORITY_OPTIONS.map(option => (
+                <button
+                  key={option.value || 'none'}
+                  onClick={() => handlePriorityChange(option.value)}
+                  disabled={updating}
+                  className={cn(
+                    "w-full px-3 py-2 text-left text-sm hover:bg-dark-surface transition-colors flex items-center gap-3",
+                    currentPriority === option.value ? option.color : "text-gray-400",
+                    updating && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <PriorityIcon priority={option.value as any} size={size} />
+                  <span>{option.label}</span>
+                  {currentPriority === option.value && (
+                    <Check className="w-3 h-3 ml-auto" />
+                  )}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     );
   }
 
@@ -86,15 +124,13 @@ export function InlinePriorityEditor({ projectId, currentPriority, onUpdate }: I
         }}
         disabled={updating}
         className={cn(
-          "w-2 h-2 rounded-full transition-all",
-          currentOption.dot,
-          "hover:ring-2 hover:ring-offset-2 hover:ring-offset-dark-bg",
-          currentPriority === 'critical' && "hover:ring-red-400/50",
-          currentPriority === 'high' && "hover:ring-orange-400/50",
-          currentPriority === 'medium' && "hover:ring-yellow-400/50",
-          currentPriority === 'low' && "hover:ring-gray-400/50"
+          "p-1 rounded transition-all",
+          "hover:bg-dark-surface",
+          "focus:outline-none focus:ring-2 focus:ring-neon-green/50"
         )}
-      />
+      >
+        <PriorityIcon priority={currentPriority as any} size={size} />
+      </button>
 
       <AnimatePresence>
         {isOpen && (
@@ -111,12 +147,12 @@ export function InlinePriorityEditor({ projectId, currentPriority, onUpdate }: I
                 onClick={() => handlePriorityChange(option.value)}
                 disabled={updating}
                 className={cn(
-                  "w-full px-3 py-2 text-left text-sm hover:bg-dark-surface transition-colors flex items-center gap-2",
+                  "w-full px-3 py-2 text-left text-sm hover:bg-dark-surface transition-colors flex items-center gap-3",
                   currentPriority === option.value ? option.color : "text-gray-400",
                   updating && "opacity-50 cursor-not-allowed"
                 )}
               >
-                <div className={cn("w-2 h-2 rounded-full", option.dot)} />
+                <PriorityIcon priority={option.value as any} size="sm" />
                 <span>{option.label}</span>
                 {currentPriority === option.value && (
                   <Check className="w-3 h-3 ml-auto" />

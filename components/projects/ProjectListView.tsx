@@ -13,7 +13,9 @@ import {
   Clock,
   Pause,
   Archive,
-  Check
+  Check,
+  Lightbulb,
+  AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -156,6 +158,11 @@ export function ProjectListView({
     const dueDate = formatDueDate(project.due_date);
     const progress = project.task_stats ? 
       (project.task_stats.completed / project.task_stats.total * 100) : 0;
+    
+    // Check if project is at risk
+    const isOverdue = dueDate && dueDate.className === 'text-red-400';
+    const hasSkillGaps = project.task_stats?.skill_gaps > 0;
+    const isAtRisk = isOverdue || hasSkillGaps;
 
     return (
       <motion.div
@@ -167,7 +174,8 @@ export function ProjectListView({
         data-project-id={project.id}
         className={cn(
           "group relative px-4 py-3 border-b border-dark-border hover:bg-dark-card/50 cursor-pointer transition-colors",
-          selectedProjectId === project.id && "bg-dark-card"
+          selectedProjectId === project.id && "bg-dark-card",
+          isOverdue && "bg-red-900/10 hover:bg-red-900/20"
         )}
       >
         <div className="flex items-center gap-4">
@@ -188,12 +196,14 @@ export function ProjectListView({
             </button>
           )}
 
-          {/* Status - Now with inline editing */}
-          <InlineStatusEditor
-            projectId={project.id}
-            currentStatus={project.status}
-            onUpdate={() => onProjectUpdate?.()}
-          />
+          {/* Status - Now with inline editing, with pulsing animation for at-risk */}
+          <div className={cn("relative", isAtRisk && "animate-pulse")}>
+            <InlineStatusEditor
+              projectId={project.id}
+              currentStatus={project.status}
+              onUpdate={() => onProjectUpdate?.()}
+            />
+          </div>
 
           {/* Priority - Now with inline editing */}
           <InlinePriorityEditor
@@ -202,19 +212,84 @@ export function ProjectListView({
             onUpdate={() => onProjectUpdate?.()}
           />
 
-          {/* Project Name & Description */}
+          {/* Project Name, Progress & Team Avatars */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 mb-1">
               <h3 className="font-medium text-white truncate">{project.name}</h3>
-              {project.task_stats?.skill_gaps > 0 && (
-                <div className="flex items-center gap-1 text-yellow-400">
-                  <AlertCircle className="w-3 h-3" />
-                  <span className="text-xs">{project.task_stats.skill_gaps}</span>
-                </div>
-              )}
+              
+              {/* Icon badges for warnings */}
+              <div className="flex items-center gap-2">
+                {project.task_stats?.skill_gaps > 0 && (
+                  <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-yellow-400/10 rounded-full">
+                    <Lightbulb className="w-3 h-3 text-yellow-400" />
+                    <span className="text-xs text-yellow-400 font-medium">{project.task_stats.skill_gaps}</span>
+                  </div>
+                )}
+                {isOverdue && (
+                  <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-red-400/10 rounded-full">
+                    <AlertTriangle className="w-3 h-3 text-red-400" />
+                  </div>
+                )}
+              </div>
+
+              {/* Avatar stack - Lead + up to 2 members */}
+              <div className="flex items-center -space-x-2 ml-auto">
+                {project.lead && (
+                  <div className="relative z-10">
+                    {project.lead.avatar_url ? (
+                      <img 
+                        src={project.lead.avatar_url} 
+                        alt={project.lead.full_name}
+                        className="w-5 h-5 rounded-full ring-2 ring-dark-surface"
+                        title={`Lead: ${project.lead.full_name}`}
+                      />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full bg-gray-600 ring-2 ring-dark-surface flex items-center justify-center text-[10px] text-white">
+                        {project.lead.full_name[0]}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {project.members?.slice(0, 2).map((member, idx) => (
+                  <div key={member.id} className="relative" style={{ zIndex: 9 - idx }}>
+                    {member.avatar_url ? (
+                      <img 
+                        src={member.avatar_url} 
+                        alt={member.full_name}
+                        className="w-5 h-5 rounded-full ring-2 ring-dark-surface"
+                        title={member.full_name}
+                      />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full bg-gray-600 ring-2 ring-dark-surface flex items-center justify-center text-[10px] text-white">
+                        {member.full_name[0]}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {project.members?.length > 2 && (
+                  <div className="relative z-0 w-5 h-5 rounded-full bg-dark-card ring-2 ring-dark-surface flex items-center justify-center">
+                    <span className="text-[10px] text-gray-400">+{project.members.length - 2}</span>
+                  </div>
+                )}
+              </div>
             </div>
-            {project.description && (
-              <p className="text-sm text-gray-500 truncate mt-0.5">{project.description}</p>
+            
+            {/* Integrated progress bar */}
+            {project.task_stats && project.task_stats.total > 0 && (
+              <div className="mt-1">
+                <div className="flex items-center justify-between text-[10px] mb-0.5">
+                  <span className="text-gray-500">
+                    {project.task_stats.completed}/{project.task_stats.total} tasks
+                  </span>
+                  <span className="text-gray-400">{Math.round(progress)}%</span>
+                </div>
+                <div className="h-0.5 bg-dark-surface rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-neon-green to-green-500 transition-all"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
             )}
           </div>
 
@@ -230,56 +305,6 @@ export function ProjectListView({
               {project.team.name}
             </div>
           )}
-
-          {/* Lead */}
-          {project.lead && (
-            <div className="flex items-center gap-2">
-              {project.lead.avatar_url ? (
-                <img 
-                  src={project.lead.avatar_url} 
-                  alt={project.lead.full_name}
-                  className="w-6 h-6 rounded-full"
-                />
-              ) : (
-                <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs text-white">
-                  {project.lead.full_name[0]}
-                </div>
-              )}
-              <span className="text-sm text-gray-400 hidden lg:inline">
-                {project.lead.full_name}
-              </span>
-            </div>
-          )}
-
-          {/* Progress */}
-          <div className="w-32">
-            {project.task_stats && project.task_stats.total > 0 ? (
-              <div>
-                <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-gray-500">
-                    {project.task_stats.completed}/{project.task_stats.total}
-                  </span>
-                  <span className="text-gray-400">{Math.round(progress)}%</span>
-                </div>
-                <div className="h-1.5 bg-dark-surface rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-neon-green to-green-500 transition-all"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <span className="text-xs text-gray-500">No tasks</span>
-            )}
-          </div>
-
-          {/* Members */}
-          <div className="flex items-center gap-1">
-            <Users className="w-4 h-4 text-gray-500" />
-            <span className="text-sm text-gray-400">
-              {project.members?.length || 0}
-            </span>
-          </div>
 
           {/* Due Date */}
           {dueDate && (

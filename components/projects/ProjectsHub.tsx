@@ -2,37 +2,34 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
-  LayoutList, 
-  LayoutGrid,
   Plus,
-  Filter,
-  GroupIcon,
   Search,
-  ChevronDown,
   Users,
-  Calendar,
-  Tag,
-  Check
+  Check,
+  LayoutList,
+  LayoutGrid
 } from 'lucide-react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { NeonButton } from '@/components/ui/NeonButton';
 import { useKeyboardShortcuts } from '@/lib/hooks/useKeyboardShortcuts';
+import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
 
-import { ProjectListView } from './ProjectListView';
+import { ProjectListViewGrid } from './ProjectListViewGrid';
 import { ProjectBoardView } from './ProjectBoardView';
+import { ProjectBoardViewDnD } from './ProjectBoardViewDnD';
 import { ProjectDetailPane } from './ProjectDetailPane';
 import { ProjectFilters } from './ProjectFilters';
-import { GroupByDropdown } from './GroupByDropdown';
-import { CreateProjectModalEnhanced } from './CreateProjectModalEnhanced';
+import { CreateProjectModalLinear } from './CreateProjectModalLinear';
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
 import { BulkActionsBar } from './BulkActionsBar';
 import { RealtimeIndicator } from '@/components/ui/RealtimeIndicator';
-
-type ViewMode = 'list' | 'board';
-type GroupBy = 'none' | 'status' | 'team' | 'priority' | 'timeline';
+import { DisplayMenu, type ViewType, type GroupBy, type OrderBy } from './DisplayMenu';
+import { projectColumns, defaultColumns } from './projectColumns';
+import { EmptyProjectsState } from './EmptyProjectsState';
+import { SmartInsightsBar } from './SmartInsightsBar';
 
 interface Project {
   id: string;
@@ -76,11 +73,11 @@ interface ProjectsHubProps {
 }
 
 export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [projects, setProjects] = useState<Project[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [isDetailPaneExpanded, setIsDetailPaneExpanded] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [bulkSelectedProjects, setBulkSelectedProjects] = useState<Set<string>>(new Set());
@@ -88,15 +85,32 @@ export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const [lastRealtimeUpdate, setLastRealtimeUpdate] = useState<Date | undefined>();
   
+  // View preferences with persistence
+  const [viewType, setViewType] = useLocalStorage<ViewType>('worktree-projects-view', 'list');
+  const [groupBy, setGroupBy] = useLocalStorage<GroupBy>('worktree-projects-groupby', 'none');
+  const [orderBy, setOrderBy] = useLocalStorage<OrderBy>('worktree-projects-orderby', 'created_at');
+  
+  // Check if we need to reset columns to new defaults
+  const [selectedColumns, setSelectedColumns] = useLocalStorage<string[]>(
+    'worktree-projects-columns',
+    defaultColumns
+  );
+  
+  // Reset columns if they contain old defaults
+  useEffect(() => {
+    if (selectedColumns.includes('team') || selectedColumns.includes('skill_gaps')) {
+      // Reset to new minimal defaults
+      setSelectedColumns(['name', 'lead', 'progress', 'due_date']);
+    }
+  }, []);
+  
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
-  const [showMyProjects, setShowMyProjects] = useState(false);
+  const [showMyProjects, setShowMyProjects] = useState(true); // Default to My Projects
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [selectedPriority, setSelectedPriority] = useState<string | null>(null);
-  
-  // Grouping state
-  const [groupBy, setGroupBy] = useState<GroupBy>('none');
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   
   // Refs for keyboard navigation
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -104,6 +118,7 @@ export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
   const statusChangeMode = useRef<boolean>(false);
   
   const supabase = createClient();
+  const [currentUserRole, setCurrentUserRole] = useState<string>('member');
 
   // Load projects with all related data
   const loadProjects = useCallback(async () => {
@@ -122,6 +137,20 @@ export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
+      // Get user's role in this organization
+      if (user && org) {
+        const { data: memberData } = await supabase
+          .from('organization_members')
+          .select('role')
+          .eq('organization_id', org.id)
+          .eq('user_id', user.id)
+          .single();
+        
+        if (memberData) {
+          setCurrentUserRole(memberData.role);
+        }
+      }
+      
       // Build query with team join - simplified without nested user profiles
       let query = supabase
         .from('internal_projects')
@@ -131,10 +160,23 @@ export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
           lead:profiles!lead_id(id, full_name, avatar_url),
           contributions(
             id,
+            task_name,
+            task_description,
             status,
+            priority,
+            due_date,
+            created_at,
+            subtasks,
             contributor_id,
-            task_required_skills(skill_id),
-            task_assignees(assignee_id, is_primary)
+            task_assignees(
+              assignee_id,
+              is_primary,
+              user:profiles!assignee_id(id, full_name, avatar_url)
+            ),
+            task_required_skills(
+              skill_id,
+              skill:skills!skill_id(id, name)
+            )
           )
         `)
         .eq('organization_id', org.id);
@@ -295,8 +337,25 @@ export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
           // Update last update time
           setLastRealtimeUpdate(new Date());
           
-          // Reload projects when changes occur
-          loadProjects();
+          // Handle different events without full reload
+          if (payload.eventType === 'UPDATE' && payload.new) {
+            // Update the specific project in local state
+            setProjects(prevProjects => 
+              prevProjects.map(p => 
+                p.id === payload.new.id 
+                  ? { ...p, ...payload.new }
+                  : p
+              )
+            );
+          } else if (payload.eventType === 'INSERT' && payload.new) {
+            // Add new project to local state
+            setProjects(prevProjects => [...prevProjects, payload.new as Project]);
+          } else if (payload.eventType === 'DELETE' && payload.old) {
+            // Remove deleted project from local state
+            setProjects(prevProjects => 
+              prevProjects.filter(p => p.id !== payload.old.id)
+            );
+          }
         }
       )
       .on('system', { event: 'connected' }, () => {
@@ -321,14 +380,14 @@ export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
           console.log('Task change:', payload);
           
           // Check if this task belongs to one of our projects
-          const affectedProject = projects.find(p => 
-            p.id === payload.new?.project_id || 
-            p.id === payload.old?.project_id
-          );
+          const projectId = payload.new?.project_id || payload.old?.project_id;
+          const affectedProject = projects.find(p => p.id === projectId);
           
           if (affectedProject) {
             setLastRealtimeUpdate(new Date());
-            loadProjects();
+            // Only reload the specific project's task stats
+            // For now, we'll skip this to avoid complexity
+            // In a production app, you'd fetch just the task stats for this project
           }
         }
       )
@@ -353,10 +412,41 @@ export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
     );
   });
 
+  // Apply sorting based on orderBy
+  const sortedFilteredProjects = [...filteredProjects].sort((a, b) => {
+    // Always prioritize overdue projects first
+    const aOverdue = a.due_date && new Date(a.due_date) < new Date();
+    const bOverdue = b.due_date && new Date(b.due_date) < new Date();
+    
+    if (aOverdue && !bOverdue) return -1;
+    if (!aOverdue && bOverdue) return 1;
+    
+    // Then apply selected ordering
+    switch (orderBy) {
+      case 'due_date':
+        if (!a.due_date) return 1;
+        if (!b.due_date) return -1;
+        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+      
+      case 'priority':
+        const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+        const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] ?? 4;
+        const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] ?? 4;
+        return aPriority - bPriority;
+      
+      case 'name':
+        return a.name.localeCompare(b.name);
+      
+      case 'created_at':
+      default:
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+  });
+
   // Group projects
   const groupedProjects = groupBy === 'none' 
-    ? { 'All Projects': filteredProjects }
-    : filteredProjects.reduce((acc, project) => {
+    ? { 'All Projects': sortedFilteredProjects }
+    : sortedFilteredProjects.reduce((acc, project) => {
         let key = '';
         switch (groupBy) {
           case 'status':
@@ -408,12 +498,12 @@ export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
 
     selectedIndex.current = newIndex;
     const project = filteredProjects[newIndex];
-    if (project && viewMode === 'list') {
+    if (project && viewType === 'list') {
       // Scroll the project into view
       const element = document.querySelector(`[data-project-id="${project.id}"]`);
       element?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
-  }, [filteredProjects, viewMode]);
+  }, [filteredProjects, viewType]);
 
   // Handle quick status change
   const handleQuickStatusChange = useCallback(async (newStatus: string) => {
@@ -443,7 +533,8 @@ export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
       key: 'k',
       cmd: true,
       handler: () => {
-        searchInputRef.current?.focus();
+        setIsSearchExpanded(true);
+        setTimeout(() => searchInputRef.current?.focus(), 100);
       },
       description: 'Focus search'
     },
@@ -456,6 +547,11 @@ export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
           setShowCreateModal(false);
         } else if (document.activeElement === searchInputRef.current) {
           searchInputRef.current?.blur();
+          if (!searchQuery) {
+            setIsSearchExpanded(false);
+          }
+        } else if (isSearchExpanded && !searchQuery) {
+          setIsSearchExpanded(false);
         }
       },
       description: 'Close panel/modal or unfocus search'
@@ -486,12 +582,12 @@ export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
     },
     {
       key: '1',
-      handler: () => setViewMode('list'),
+      handler: () => setViewType('list'),
       description: 'List view'
     },
     {
       key: '2',
-      handler: () => setViewMode('board'),
+      handler: () => setViewType('board'),
       description: 'Board view'
     },
     {
@@ -573,7 +669,7 @@ export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
       cmd: true,
       handler: () => {
         // Select all visible projects
-        const allIds = new Set(filteredProjects.map(p => p.id));
+        const allIds = new Set(sortedFilteredProjects.map(p => p.id));
         setBulkSelectedProjects(allIds);
         setShowBulkActions(true);
       },
@@ -593,167 +689,230 @@ export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
   ], !loading && !showCreateModal);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Projects Hub</h1>
-          <div className="flex items-center gap-4">
-            <p className="text-gray-400 mt-1">
-              Manage and track all organization projects
-            </p>
-            <RealtimeIndicator 
-              isConnected={isRealtimeConnected} 
-              lastUpdate={lastRealtimeUpdate} 
-            />
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          {/* View Mode Toggle */}
-          <div className="flex items-center bg-dark-card rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('list')}
-              className={cn(
-                "p-2 rounded transition-colors",
-                viewMode === 'list' 
-                  ? "bg-dark-surface text-white" 
-                  : "text-gray-400 hover:text-white"
-              )}
-              title="List view"
-            >
-              <LayoutList className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('board')}
-              className={cn(
-                "p-2 rounded transition-colors",
-                viewMode === 'board' 
-                  ? "bg-dark-surface text-white" 
-                  : "text-gray-400 hover:text-white"
-              )}
-              title="Board view"
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-          </div>
+    <div className="h-full flex flex-col overflow-hidden relative">
+      {/* Header and Filters Section */}
+      <div className="flex-shrink-0">
+        {/* Header */}
+        <div className="mb-6">
+          {/* Smart Insights Bar */}
+          <SmartInsightsBar projects={projects} className="mb-4" />
           
-          <NeonButton
-            onClick={() => setShowCreateModal(true)}
-            icon={<Plus className="w-4 h-4" />}
-          >
-            Create Project
-          </NeonButton>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Projects Hub</h1>
+              <div className="flex items-center gap-4">
+                <p className="text-gray-400 mt-1">
+                  Manage and track all organization projects
+                </p>
+                <RealtimeIndicator 
+                  isConnected={isRealtimeConnected} 
+                  lastUpdate={lastRealtimeUpdate} 
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              {/* View Type Toggle */}
+              <div className="flex items-center bg-dark-card border border-dark-border rounded-lg p-1">
+                <button
+                  onClick={() => setViewType('list')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-md transition-colors text-sm font-medium flex items-center gap-2",
+                    viewType === 'list' 
+                      ? "bg-neon-green/20 text-neon-green" 
+                      : "text-gray-400 hover:text-white"
+                  )}
+                >
+                  <LayoutList className="w-4 h-4" />
+                  List
+                </button>
+                <button
+                  onClick={() => setViewType('board')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-md transition-colors text-sm font-medium flex items-center gap-2",
+                    viewType === 'board' 
+                      ? "bg-neon-green/20 text-neon-green" 
+                      : "text-gray-400 hover:text-white"
+                  )}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                  Board
+                </button>
+              </div>
+              
+              {/* Display Menu */}
+              <DisplayMenu
+                viewType={viewType}
+                onViewTypeChange={setViewType}
+                groupBy={groupBy}
+                onGroupByChange={setGroupBy}
+                orderBy={orderBy}
+                onOrderByChange={setOrderBy}
+                selectedColumns={selectedColumns}
+                onColumnsChange={setSelectedColumns}
+                availableColumns={projectColumns}
+              />
+              
+              <NeonButton
+                onClick={() => setShowCreateModal(true)}
+                icon={<Plus className="w-4 h-4" />}
+              >
+                Create Project
+              </NeonButton>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Filters Bar */}
-      <div className="mb-4 space-y-3">
-        <div className="flex items-center gap-3">
-          {/* Search */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Search projects... (⌘K)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-dark-card border border-dark-border rounded-lg text-white placeholder-gray-500 focus:border-neon-green focus:outline-none"
+        {/* Filters Bar */}
+        <div className="mb-4 space-y-3">
+          <div className="flex items-center gap-3">
+            {/* Expandable Search */}
+            <AnimatePresence mode="wait">
+              {isSearchExpanded ? (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: "24rem", opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="relative overflow-hidden"
+                >
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Search projects..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onBlur={() => {
+                      if (!searchQuery) setIsSearchExpanded(false);
+                    }}
+                    className="w-full pl-10 pr-4 py-2 bg-dark-card border border-dark-border rounded-lg text-white placeholder-gray-500 focus:border-neon-green focus:outline-none"
+                    autoFocus
+                  />
+                </motion.div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setIsSearchExpanded(true);
+                    setTimeout(() => searchInputRef.current?.focus(), 100);
+                  }}
+                  className="p-2 rounded-lg bg-dark-card border border-dark-border hover:border-gray-600 transition-colors"
+                  title="Search projects (⌘K)"
+                >
+                  <Search className="w-4 h-4 text-gray-400" />
+                </button>
+              )}
+            </AnimatePresence>
+
+            {/* Project Filter Toggle */}
+            <div className="flex items-center bg-dark-card border border-dark-border rounded-lg p-1">
+              <button
+                onClick={() => setShowMyProjects(true)}
+                className={cn(
+                  "px-3 py-1.5 rounded-md transition-colors text-sm font-medium",
+                  showMyProjects 
+                    ? "bg-neon-green/20 text-neon-green" 
+                    : "text-gray-400 hover:text-white"
+                )}
+              >
+                My Projects
+              </button>
+              <button
+                onClick={() => setShowMyProjects(false)}
+                className={cn(
+                  "px-3 py-1.5 rounded-md transition-colors text-sm font-medium",
+                  !showMyProjects 
+                    ? "bg-neon-green/20 text-neon-green" 
+                    : "text-gray-400 hover:text-white"
+                )}
+              >
+                All Projects
+              </button>
+            </div>
+
+
+            {/* Team Filter */}
+            <ProjectFilters
+              teams={teams}
+              selectedTeamId={selectedTeamId}
+              onTeamChange={setSelectedTeamId}
+              selectedStatus={selectedStatus}
+              onStatusChange={setSelectedStatus}
+              selectedPriority={selectedPriority}
+              onPriorityChange={setSelectedPriority}
             />
           </div>
-
-          {/* Quick Filters */}
-          <button
-            onClick={() => setShowMyProjects(!showMyProjects)}
-            className={cn(
-              "px-4 py-2 rounded-lg transition-colors flex items-center gap-2",
-              showMyProjects 
-                ? "bg-neon-green/20 text-neon-green border border-neon-green/30" 
-                : "bg-dark-card text-gray-400 hover:text-white border border-dark-border"
-            )}
-          >
-            <Users className="w-4 h-4" />
-            My Projects
-          </button>
-
-          {/* Bulk Actions Toggle */}
-          <button
-            onClick={() => setShowBulkActions(!showBulkActions)}
-            className={cn(
-              "px-4 py-2 rounded-lg transition-colors flex items-center gap-2",
-              showBulkActions 
-                ? "bg-neon-green/20 text-neon-green border border-neon-green/30" 
-                : "bg-dark-card text-gray-400 hover:text-white border border-dark-border"
-            )}
-          >
-            <Check className="w-4 h-4" />
-            Select
-          </button>
-
-          {/* Team Filter */}
-          <ProjectFilters
-            teams={teams}
-            selectedTeamId={selectedTeamId}
-            onTeamChange={setSelectedTeamId}
-            selectedStatus={selectedStatus}
-            onStatusChange={setSelectedStatus}
-            selectedPriority={selectedPriority}
-            onPriorityChange={setSelectedPriority}
-          />
-
-          {/* Group By */}
-          <GroupByDropdown
-            value={groupBy}
-            onChange={setGroupBy}
-          />
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 relative overflow-hidden">
-        {/* Projects View */}
-        <div className={cn(
-          "h-full overflow-hidden transition-all duration-300",
-          selectedProjectId ? "mr-[600px]" : "mr-0"
-        )}>
-          {viewMode === 'list' ? (
-            <ProjectListView
-              projects={filteredProjects}
-              groupedProjects={groupedProjects}
-              groupBy={groupBy}
-              onProjectClick={setSelectedProjectId}
-              selectedProjectId={selectedProjectId}
-              loading={loading}
-              onProjectUpdate={loadProjects}
-              onSelectionChange={handleBulkSelectionChange}
-              showCheckboxes={showBulkActions}
-            />
-          ) : (
-            <ProjectBoardView
-              projects={filteredProjects}
-              onProjectClick={setSelectedProjectId}
-              selectedProjectId={selectedProjectId}
-              loading={loading}
-            />
-          )}
-        </div>
-
-        {/* Detail Pane */}
-        <AnimatePresence>
-          {selectedProjectId && selectedProject && (
-            <ProjectDetailPane
-              project={selectedProject}
-              onClose={() => setSelectedProjectId(null)}
-              onUpdate={loadProjects}
-            />
-          )}
-        </AnimatePresence>
+      <div className="flex-1 overflow-hidden">
+        {/* Empty State */}
+        {!loading && projects.length === 0 ? (
+          <EmptyProjectsState
+            onCreateProject={() => setShowCreateModal(true)}
+            isAdmin={['admin', 'president'].includes(currentUserRole)}
+          />
+        ) : (
+          /* Projects View */
+          <div className={cn(
+            "h-full overflow-hidden transition-all duration-300",
+            selectedProjectId && !isDetailPaneExpanded ? "mr-[600px]" : "mr-0",
+            isDetailPaneExpanded && "opacity-0 pointer-events-none"
+          )}>
+              {viewType === 'list' ? (
+              <ProjectListViewGrid
+                projects={sortedFilteredProjects}
+                groupedProjects={groupedProjects}
+                groupBy={groupBy}
+                onProjectClick={setSelectedProjectId}
+                selectedProjectId={selectedProjectId}
+                loading={loading}
+                onProjectUpdate={loadProjects}
+                onSelectionChange={handleBulkSelectionChange}
+                showCheckboxes={showBulkActions}
+                selectedColumns={selectedColumns}
+                availableColumns={projectColumns}
+              />
+            ) : (
+              <ProjectBoardViewDnD
+                projects={sortedFilteredProjects}
+                onProjectClick={setSelectedProjectId}
+                selectedProjectId={selectedProjectId}
+                loading={loading}
+                onProjectUpdate={(updatedProject) => {
+                  // Update the local state without reloading
+                  setProjects(prevProjects => 
+                    prevProjects.map(p => 
+                      p.id === updatedProject.id ? updatedProject : p
+                    )
+                  );
+                }}
+              />
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Detail Pane - Now positioned at the root level */}
+      <AnimatePresence>
+        {selectedProjectId && selectedProject && (
+          <ProjectDetailPane
+            project={selectedProject}
+            onClose={() => {
+              setSelectedProjectId(null);
+              setIsDetailPaneExpanded(false);
+            }}
+            onUpdate={loadProjects}
+            isExpanded={isDetailPaneExpanded}
+            onToggleExpand={() => setIsDetailPaneExpanded(!isDetailPaneExpanded)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Create Project Modal */}
       {showCreateModal && (
-        <CreateProjectModalEnhanced
+        <CreateProjectModalLinear
           orgSlug={orgSlug}
           teams={teams}
           onClose={() => setShowCreateModal(false)}

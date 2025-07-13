@@ -16,6 +16,7 @@ import { motion } from 'framer-motion';
 
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { cn } from '@/lib/utils';
+import { PriorityIcon, PRIORITY_CONFIG } from '@/components/ui/PriorityIcon';
 
 interface Project {
   id: string;
@@ -87,12 +88,7 @@ const BOARD_COLUMNS = [
   }
 ];
 
-const priorityConfig = {
-  critical: { dot: 'bg-red-400' },
-  high: { dot: 'bg-orange-400' },
-  medium: { dot: 'bg-yellow-400' },
-  low: { dot: 'bg-gray-400' }
-};
+// Priority configuration now comes from PriorityIcon component
 
 export function ProjectBoardView({
   projects,
@@ -130,7 +126,6 @@ export function ProjectBoardView({
   };
 
   const renderProjectCard = (project: Project) => {
-    const priority = priorityConfig[project.priority as keyof typeof priorityConfig];
     const dueDate = formatDueDate(project.due_date);
     const progress = project.task_stats?.total > 0 
       ? (project.task_stats.completed / project.task_stats.total * 100) 
@@ -145,18 +140,31 @@ export function ProjectBoardView({
         onDragEnd={() => setDraggedProject(null)}
         onClick={() => onProjectClick(project.id)}
         className={cn(
-          "p-4 bg-dark-card border border-dark-border rounded-lg cursor-pointer",
+          "relative bg-dark-card border border-dark-border rounded-lg cursor-pointer overflow-hidden",
           "hover:border-gray-600 transition-colors",
           selectedProjectId === project.id && "border-neon-green/50",
           draggedProject === project.id && "opacity-50"
         )}
       >
+        {/* Priority color strip */}
+        <div 
+          className={cn(
+            "absolute left-0 top-0 bottom-0 w-2 transition-all",
+            project.priority === 'critical' && "bg-red-400",
+            project.priority === 'high' && "bg-orange-400",
+            project.priority === 'medium' && "bg-yellow-400",
+            project.priority === 'low' && "bg-gray-400"
+          )}
+        />
+        
+        {/* Content wrapper */}
+        <div className="p-4 pl-5">
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              {priority && (
-                <div className={cn("w-2 h-2 rounded-full", priority.dot)} />
+              {project.priority && (
+                <PriorityIcon priority={project.priority as any} size="sm" />
               )}
               <h4 className="font-medium text-white text-sm line-clamp-1">{project.name}</h4>
             </div>
@@ -252,6 +260,7 @@ export function ProjectBoardView({
             <span className="text-xs text-gray-400">{project.lead.full_name}</span>
           </div>
         )}
+        </div>
       </motion.div>
     );
   };

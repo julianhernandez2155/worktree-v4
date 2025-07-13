@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 
-import { ProjectDetail } from '@/components/projects/ProjectDetail';
+import { ProjectFullPage } from '@/components/projects/ProjectFullPage';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 interface ProjectDetailPageProps {
@@ -12,7 +12,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <ProjectDetail orgSlug={slug} projectId={projectId} />
+      <ProjectFullPage orgSlug={slug} projectId={projectId} />
     </Suspense>
   );
 }
