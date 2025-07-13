@@ -157,7 +157,6 @@ export function CreateProjectModal({ orgSlug, onClose, onProjectCreated }: Creat
         task_name: task.name,
         task_description: task.description,
         skills_used: task.requiredSkills,
-        contribution_type: 'internal',
         status: 'pending'
       }));
 

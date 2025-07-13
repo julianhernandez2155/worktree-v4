@@ -237,7 +237,6 @@ export function CreateProjectModalEnhanced({
           task_name: task.name,
           task_description: task.description,
           skills_used: task.requiredSkills,
-          contribution_type: 'internal',
           status: 'pending',
           estimated_hours: task.estimatedHours
         }));

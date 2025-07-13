@@ -137,7 +137,6 @@ export type Database = {
           assignee_notes: string | null
           completed_at: string | null
           completion_quality: number | null
-          contribution_type: string
           contributor_id: string | null
           created_at: string | null
           due_date: string | null
@@ -158,7 +157,6 @@ export type Database = {
           assignee_notes?: string | null
           completed_at?: string | null
           completion_quality?: number | null
-          contribution_type: string
           contributor_id?: string | null
           created_at?: string | null
           due_date?: string | null
@@ -179,7 +177,6 @@ export type Database = {
           assignee_notes?: string | null
           completed_at?: string | null
           completion_quality?: number | null
-          contribution_type?: string
           contributor_id?: string | null
           created_at?: string | null
           due_date?: string | null

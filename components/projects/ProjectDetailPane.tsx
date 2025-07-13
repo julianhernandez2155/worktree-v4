@@ -670,6 +670,7 @@ export function ProjectDetailPane({
             projectId={project.id}
             tasks={project.contributions || []}
             onUpdate={onUpdate}
+            organizationId={project.organization_id}
           />
         )}
 

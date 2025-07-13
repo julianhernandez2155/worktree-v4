@@ -50,7 +50,6 @@ export function AddTaskModal({ projectId, onClose, onTaskAdded }: AddTaskModalPr
           priority,
           due_date: dueDate || null,
           estimated_hours: estimatedHours ? parseFloat(estimatedHours) : null,
-          contribution_type: 'task',
           status: 'pending'
         })
         .select()

@@ -138,7 +138,6 @@ export function NaturalLanguageTaskInput({
         project_id: projectId,
         task_name: preview.title,
         task_description: preview.description || '',
-        contribution_type: 'task', // Required field!
         status: 'pending',
         priority: preview.priority || 'medium',
         due_date: preview.due_date_parsed?.date || null,

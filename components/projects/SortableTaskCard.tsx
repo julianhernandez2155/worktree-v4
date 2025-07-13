@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { 
@@ -8,10 +9,15 @@ import {
   AlertTriangle,
   CheckSquare,
   Tag,
-  MoreVertical
+  MoreVertical,
+  Edit,
+  Trash2,
+  Copy,
+  CheckCircle2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PriorityIcon } from '@/components/ui/PriorityIcon';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface Task {
   id: string;
@@ -31,10 +37,13 @@ interface Task {
 interface SortableTaskCardProps {
   task: Task;
   onClick?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   isDragging?: boolean;
 }
 
-export function SortableTaskCard({ task, onClick, isDragging = false }: SortableTaskCardProps) {
+export function SortableTaskCard({ task, onClick, onEdit, onDelete, isDragging = false }: SortableTaskCardProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const {
     attributes,
     listeners,
@@ -88,32 +97,123 @@ export function SortableTaskCard({ task, onClick, isDragging = false }: Sortable
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group bg-dark-surface rounded-lg border border-dark-border p-4 cursor-pointer transition-all",
-        "hover:border-gray-600 hover:shadow-lg",
+        "group bg-dark-surface rounded-lg border p-4 cursor-pointer transition-all relative overflow-hidden",
+        "hover:shadow-lg",
+        task.priority === 'urgent' ? "border-red-500/50 bg-red-950/20" : "border-dark-border hover:border-gray-600",
         isSortableDragging && "shadow-2xl"
       )}
       onClick={onClick}
       {...attributes}
       {...listeners}
     >
+      {/* Urgent indicator strip */}
+      {task.priority === 'urgent' && (
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-red-500 to-red-600" />
+      )}
       {/* Header */}
       <div className="flex items-start justify-between mb-2">
-        <h3 className="font-medium text-white line-clamp-2 flex-1 mr-2">
-          {task.task_name || task.title || 'Untitled Task'}
-        </h3>
+        <div className="flex-1 mr-2">
+          {task.priority === 'urgent' && (
+            <div className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-500/20 text-red-400 text-xs font-medium rounded mb-1">
+              <AlertTriangle className="w-3 h-3" />
+              URGENT
+            </div>
+          )}
+          <h3 className="font-medium text-white line-clamp-2">
+            {task.task_name || task.title || 'Untitled Task'}
+          </h3>
+        </div>
         <div className="flex items-center gap-1">
           {task.priority && (
-            <PriorityIcon priority={task.priority as any} size="sm" />
+            <PriorityIcon 
+              priority={task.priority === 'urgent' ? 'critical' : task.priority as any} 
+              size="sm" 
+            />
           )}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              // TODO: Implement task menu
-            }}
-            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-dark-card rounded transition-all"
-          >
-            <MoreVertical className="w-4 h-4 text-gray-400" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen(!menuOpen);
+              }}
+              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-dark-card rounded transition-all"
+            >
+              <MoreVertical className="w-4 h-4 text-gray-400" />
+            </button>
+            
+            <AnimatePresence>
+              {menuOpen && (
+                <>
+                  {/* Backdrop */}
+                  <div 
+                    className="fixed inset-0 z-30" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(false);
+                    }}
+                  />
+                  
+                  {/* Menu */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="absolute right-0 mt-1 w-48 bg-dark-card border border-dark-border rounded-lg shadow-xl z-40 py-1"
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        onClick?.();
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm hover:bg-dark-surface transition-colors flex items-center gap-2"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Edit Task
+                    </button>
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        // TODO: Implement duplicate task
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm hover:bg-dark-surface transition-colors flex items-center gap-2"
+                    >
+                      <Copy className="w-4 h-4" />
+                      Duplicate
+                    </button>
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        // TODO: Implement mark as complete
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm hover:bg-dark-surface transition-colors flex items-center gap-2"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      Mark Complete
+                    </button>
+                    
+                    <div className="border-t border-dark-border my-1" />
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        onDelete?.();
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm hover:bg-dark-surface transition-colors flex items-center gap-2 text-red-400 hover:text-red-300"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
+                    </button>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 

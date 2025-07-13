@@ -35,6 +35,7 @@ import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { SortableTaskCard } from './SortableTaskCard';
 import { DroppableTaskColumn } from './DroppableTaskColumn';
+import { TaskModal } from './TaskModal';
 import toast from 'react-hot-toast';
 
 interface Task {
@@ -56,6 +57,7 @@ interface TaskKanbanBoardProps {
   projectId: string;
   tasks: Task[];
   onUpdate: () => void;
+  organizationId: string;
 }
 
 const TASK_COLUMNS = [
@@ -93,10 +95,12 @@ const TASK_COLUMNS = [
   }
 ];
 
-export function TaskKanbanBoard({ projectId, tasks, onUpdate }: TaskKanbanBoardProps) {
+export function TaskKanbanBoard({ projectId, tasks, onUpdate, organizationId }: TaskKanbanBoardProps) {
   const [tasksByStatus, setTasksByStatus] = useState<Record<string, Task[]>>({});
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [collapsedColumns, setCollapsedColumns] = useState<Set<string>>(new Set());
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const supabase = createClient();
 
   // Initialize sensors for drag and drop
@@ -114,6 +118,16 @@ export function TaskKanbanBoard({ projectId, tasks, onUpdate }: TaskKanbanBoardP
   );
 
   useEffect(() => {
+    // Define priority order (highest to lowest)
+    const priorityOrder: Record<string, number> = {
+      'urgent': 4,
+      'high': 3,
+      'medium': 2,
+      'low': 1,
+      'null': 0,
+      'undefined': 0
+    };
+
     // Group tasks by status
     const grouped = tasks.reduce((acc, task) => {
       const status = task.status || 'pending';
@@ -121,6 +135,15 @@ export function TaskKanbanBoard({ projectId, tasks, onUpdate }: TaskKanbanBoardP
       acc[status].push(task);
       return acc;
     }, {} as Record<string, Task[]>);
+
+    // Sort tasks within each status by priority (highest to lowest)
+    Object.keys(grouped).forEach(status => {
+      grouped[status].sort((a, b) => {
+        const priorityA = priorityOrder[String(a.priority)] || 0;
+        const priorityB = priorityOrder[String(b.priority)] || 0;
+        return priorityB - priorityA; // Sort descending (highest priority first)
+      });
+    });
 
     // Ensure all columns exist
     TASK_COLUMNS.forEach(column => {
@@ -155,6 +178,16 @@ export function TaskKanbanBoard({ projectId, tasks, onUpdate }: TaskKanbanBoardP
       return;
     }
 
+    // Define priority order for sorting
+    const priorityOrder: Record<string, number> = {
+      'urgent': 4,
+      'high': 3,
+      'medium': 2,
+      'low': 1,
+      'null': 0,
+      'undefined': 0
+    };
+
     // Optimistic update
     const updatedTask = { ...activeTask, status: newStatus };
     
@@ -164,9 +197,16 @@ export function TaskKanbanBoard({ projectId, tasks, onUpdate }: TaskKanbanBoardP
       // Remove from old status
       updated[oldStatus] = updated[oldStatus].filter(t => t.id !== taskId);
       
-      // Add to new status
+      // Add to new status and sort by priority
       if (!updated[newStatus]) updated[newStatus] = [];
       updated[newStatus] = [...updated[newStatus], updatedTask];
+      
+      // Sort the new status column by priority (highest to lowest)
+      updated[newStatus].sort((a, b) => {
+        const priorityA = priorityOrder[String(a.priority)] || 0;
+        const priorityB = priorityOrder[String(b.priority)] || 0;
+        return priorityB - priorityA;
+      });
       
       return updated;
     });
@@ -176,8 +216,7 @@ export function TaskKanbanBoard({ projectId, tasks, onUpdate }: TaskKanbanBoardP
       const { error } = await supabase
         .from('contributions')
         .update({ 
-          status: newStatus,
-          updated_at: new Date().toISOString()
+          status: newStatus
         })
         .eq('id', taskId);
 
@@ -281,7 +320,8 @@ export function TaskKanbanBoard({ projectId, tasks, onUpdate }: TaskKanbanBoardP
                           "flex items-center justify-center gap-2 group"
                         )}
                         onClick={() => {
-                          // TODO: Open add task modal
+                          setSelectedTask(null);
+                          setTaskModalOpen(true);
                         }}
                       >
                         <Plus className="w-4 h-4 text-neon-green group-hover:text-white transition-colors" />
@@ -307,7 +347,8 @@ export function TaskKanbanBoard({ projectId, tasks, onUpdate }: TaskKanbanBoardP
                             <SortableTaskCard
                               task={task}
                               onClick={() => {
-                                // TODO: Open task detail modal
+                                setSelectedTask(task);
+                                setTaskModalOpen(true);
                               }}
                             />
                           </motion.div>
@@ -331,6 +372,23 @@ export function TaskKanbanBoard({ projectId, tasks, onUpdate }: TaskKanbanBoardP
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {/* Task Modal */}
+      <TaskModal
+        open={taskModalOpen}
+        onClose={() => {
+          setTaskModalOpen(false);
+          setSelectedTask(null);
+        }}
+        onSuccess={() => {
+          onUpdate();
+          setTaskModalOpen(false);
+          setSelectedTask(null);
+        }}
+        projectId={projectId}
+        task={selectedTask}
+        organizationId={organizationId}
+      />
     </div>
   );
 }
