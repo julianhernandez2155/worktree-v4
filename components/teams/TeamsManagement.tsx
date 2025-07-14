@@ -8,7 +8,9 @@ import {
   Users,
   Hash,
   Palette,
-  X
+  X,
+  LayoutGrid,
+  GitBranch
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -16,6 +18,10 @@ import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { NeonButton } from '@/components/ui/NeonButton';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { OrgChartView } from './OrgChartView';
+import { OrgChartControls } from './OrgChartControls';
+import { PositionEditModal } from './PositionEditModal';
+import { AddPositionModal } from './AddPositionModal';
 
 interface Team {
   id: string;
@@ -55,9 +61,16 @@ export function TeamsManagement({ orgSlug }: TeamsManagementProps) {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const [activeView, setActiveView] = useState<'teams' | 'chart'>('teams');
+  const [orgMembers, setOrgMembers] = useState<any[]>([]);
+  const [organizationId, setOrganizationId] = useState<string>('');  
+  const [isEditingChart, setIsEditingChart] = useState(false);
+  const [canEditOrg, setCanEditOrg] = useState(false);
+  const [editingPosition, setEditingPosition] = useState<any | null>(null);
+  const [showAddPositionModal, setShowAddPositionModal] = useState(false);
   const supabase = createClient();
 
-  // Load teams with member count
+  // Load teams with member count and organization data
   const loadTeams = async () => {
     try {
       setLoading(true);
@@ -70,21 +83,93 @@ export function TeamsManagement({ orgSlug }: TeamsManagementProps) {
         
       if (!org) return;
       
-      const { data: teamsData, error } = await supabase
+      setOrganizationId(org.id);
+      
+      // Load teams
+      const { data: teamsData, error: teamsError } = await supabase
         .from('organization_teams')
-        .select(`
-          *,
-          team_members(count)
-        `)
+        .select('*')
         .eq('organization_id', org.id)
         .order('name');
         
-      if (error) throw error;
+      // Load team member counts separately to avoid policy recursion
+      const teamsWithMembers = [];
+      if (teamsData) {
+        for (const team of teamsData) {
+          const { count } = await supabase
+            .from('team_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('team_id', team.id);
+          
+          // Also get team members for org chart
+          const { data: teamMembers } = await supabase
+            .from('team_members')
+            .select('user_id, role')
+            .eq('team_id', team.id);
+            
+          teamsWithMembers.push({
+            ...team,
+            member_count: count || 0,
+            team_members: teamMembers || []
+          });
+        }
+      }
+        
+      if (teamsError) throw teamsError;
       
-      setTeams(teamsData?.map(team => ({
-        ...team,
-        member_count: team.team_members?.[0]?.count || 0
-      })) || []);
+      setTeams(teamsWithMembers);
+      
+      // Load organization members with their roles (exclude regular members from org chart)
+      const { data: membersData, error: membersError } = await supabase
+        .from('organization_members')
+        .select(`
+          user_id,
+          role,
+          display_title,
+          reports_to,
+          reports_to_role,
+          position_order,
+          position_description,
+          user:profiles!organization_members_user_id_fkey(
+            id,
+            full_name,
+            avatar_url,
+            email
+          )
+        `)
+        .eq('organization_id', org.id)
+        .neq('role', 'member') // Exclude regular members from org chart
+        .order('position_order');
+        
+      if (membersError) throw membersError;
+      
+      // Load vacant positions
+      const { data: vacantData } = await supabase
+        .from('vacant_positions')
+        .select('*')
+        .eq('organization_id', org.id)
+        .order('position_order');
+      
+      // Combine members and vacant positions for org chart
+      const allPositions = [
+        ...(membersData || []),
+        ...(vacantData || []).map(v => ({
+          ...v,
+          id: v.id, // Use the vacant position's own ID
+          user_id: null,
+          is_vacant: true,
+          user: null
+        }))
+      ];
+      
+      setOrgMembers(allPositions);
+      
+      // Check if current user can edit
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const currentMember = membersData?.find(m => m.user_id === user.id);
+        setCanEditOrg(currentMember?.role === 'admin' || currentMember?.role === 'president' || true); // TODO: Remove true for production
+      }
       
     } catch (error) {
       console.error('Error loading teams:', error);
@@ -132,16 +217,48 @@ export function TeamsManagement({ orgSlug }: TeamsManagementProps) {
           </p>
         </div>
         
-        <NeonButton
-          onClick={() => setShowCreateModal(true)}
-          icon={<Plus className="w-4 h-4" />}
-        >
-          Create Team
-        </NeonButton>
+        {activeView === 'teams' && (
+          <NeonButton
+            onClick={() => setShowCreateModal(true)}
+            icon={<Plus className="w-4 h-4" />}
+          >
+            Create Team
+          </NeonButton>
+        )}
       </div>
 
-      {/* Teams Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* View Tabs */}
+      <div className="flex items-center gap-1 mb-6 bg-dark-card p-1 rounded-lg w-fit">
+        <button
+          onClick={() => setActiveView('teams')}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+            activeView === 'teams'
+              ? "bg-dark-surface text-white"
+              : "text-gray-400 hover:text-white"
+          )}
+        >
+          <LayoutGrid className="w-4 h-4" />
+          Teams
+        </button>
+        <button
+          onClick={() => setActiveView('chart')}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+            activeView === 'chart'
+              ? "bg-dark-surface text-white"
+              : "text-gray-400 hover:text-white"
+          )}
+        >
+          <GitBranch className="w-4 h-4" />
+          Org Chart
+        </button>
+      </div>
+
+      {/* Content based on active view */}
+      {activeView === 'teams' ? (
+        /* Teams Grid */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {teams.map(team => (
           <motion.div
             key={team.id}
@@ -188,6 +305,46 @@ export function TeamsManagement({ orgSlug }: TeamsManagementProps) {
           </motion.div>
         ))}
       </div>
+      ) : (
+        /* Org Chart View */
+        <div>
+          <OrgChartControls
+            isEditing={isEditingChart}
+            onToggleEdit={() => setIsEditingChart(!isEditingChart)}
+            onAddPosition={() => {
+              setShowAddPositionModal(true);
+            }}
+            onExport={() => {
+              // TODO: Implement export functionality
+              console.log('Export clicked');
+            }}
+            onSave={() => {
+              // TODO: Implement save functionality
+              setIsEditingChart(false);
+            }}
+            onCancel={() => {
+              setIsEditingChart(false);
+            }}
+            hasChanges={false}
+            canEdit={canEditOrg}
+          />
+          
+          <OrgChartView
+            organizationId={organizationId}
+            members={orgMembers}
+            teams={teams}
+            isEditing={isEditingChart}
+            onPositionClick={(userId, role) => {
+              if (isEditingChart) {
+                const member = orgMembers.find(m => m.user_id === userId);
+                if (member) {
+                  setEditingPosition(member);
+                }
+              }
+            }}
+          />
+        </div>
+      )}
 
       {/* Create/Edit Modal */}
       <AnimatePresence>
@@ -203,6 +360,38 @@ export function TeamsManagement({ orgSlug }: TeamsManagementProps) {
               setShowCreateModal(false);
               setEditingTeam(null);
               loadTeams();
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Position Edit Modal */}
+      <AnimatePresence>
+        {editingPosition && (
+          <PositionEditModal
+            member={editingPosition}
+            allMembers={orgMembers}
+            organizationId={organizationId}
+            onClose={() => setEditingPosition(null)}
+            onSuccess={() => {
+              setEditingPosition(null);
+              loadTeams(); // Reload to get updated data
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Add Position Modal */}
+      <AnimatePresence>
+        {showAddPositionModal && (
+          <AddPositionModal
+            organizationId={organizationId}
+            teams={teams}
+            existingMembers={orgMembers}
+            onClose={() => setShowAddPositionModal(false)}
+            onSuccess={() => {
+              setShowAddPositionModal(false);
+              loadTeams(); // Reload to get updated data
             }}
           />
         )}

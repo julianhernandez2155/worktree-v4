@@ -484,7 +484,7 @@ export function ProjectDetailPane({
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 overflow-y-auto custom-scrollbar" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {activeTab === 'overview' && (
           <div className="p-6">
             {/* Progress Bar at the top */}
@@ -759,7 +759,7 @@ export function ProjectDetailPane({
             </div>
             
             {/* Task Kanban Board */}
-            <div className="flex-1 overflow-hidden">
+            <div className="px-6 py-4">
               <TaskKanbanBoardV2 
                 projectId={project.id}
                 tasks={project.contributions || []}

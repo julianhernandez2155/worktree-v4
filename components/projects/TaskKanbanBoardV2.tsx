@@ -518,7 +518,7 @@ export function TaskKanbanBoardV2({
       onDragCancel={handleDragCancel}
       measuring={measuring}
     >
-      <div className="flex gap-4 p-4 overflow-x-auto min-h-[calc(100vh-200px)]">
+      <div className="flex gap-4 overflow-x-auto">
         {TASK_STATUS_COLUMNS
           .filter(column => visibleColumns.includes(column.value))
           .map(column => (
@@ -664,7 +664,7 @@ function TaskColumn({
       </div>
 
       {/* Tasks List */}
-      <div className="p-2 space-y-2 min-h-[200px]">
+      <div className="p-2 space-y-2">
         <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
           <AnimatePresence>
             {tasks.map(task => (

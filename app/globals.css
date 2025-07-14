@@ -314,6 +314,40 @@
     scrollbar-width: none;
   }
 
+  /* React Flow dark theme overrides */
+  .react-flow__background {
+    background-color: #0a0a0a;
+  }
+
+  .react-flow__controls {
+    background: #1c1c1f;
+    border: 1px solid #2a2a2d;
+  }
+
+  .react-flow__controls button {
+    background: #1c1c1f;
+    border-color: #2a2a2d;
+    color: #9ca3af;
+  }
+
+  .react-flow__controls button:hover {
+    background: #2a2a2d;
+    color: white;
+  }
+
+  .react-flow__minimap {
+    background: #1c1c1f;
+    border: 1px solid #2a2a2d;
+  }
+
+  .react-flow__minimap-mask {
+    fill: rgba(0, 0, 0, 0.8);
+  }
+
+  .react-flow__minimap-node {
+    fill: #404040;
+  }
+
   /* Slide up animation */
   @keyframes slide-up {
     from {
