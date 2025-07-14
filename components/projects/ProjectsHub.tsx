@@ -899,6 +899,7 @@ export function ProjectsHub({ orgSlug }: ProjectsHubProps) {
         {selectedProjectId && selectedProject && (
           <ProjectDetailPane
             project={selectedProject}
+            orgSlug={orgSlug}
             onClose={() => {
               setSelectedProjectId(null);
               setIsDetailPaneExpanded(false);

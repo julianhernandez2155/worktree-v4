@@ -153,7 +153,8 @@ export function TaskModal({
       setDueDate(task.due_date || '');
       setEstimatedHours(task.estimated_hours?.toString() || '');
       setSubtasks(task.subtasks || []);
-      setSelectedAssignees(task.task_assignees?.map((ta: any) => ta.user_id) || []);
+      // Handle both data structures: ta.user_id or ta.user.id
+      setSelectedAssignees(task.task_assignees?.map((ta: any) => ta.user_id || ta.user?.id) || []);
       if (task.subtasks?.length > 0) {
         setShowSubtasks(true);
       }
@@ -179,7 +180,23 @@ export function TaskModal({
         .select('user:profiles(id, full_name, avatar_url)')
         .eq('organization_id', organizationId);
       
-      setAllOrgMembers(orgMembers?.map(m => m.user).filter(Boolean) || []);
+      const allMembers = orgMembers?.map(m => m.user).filter(Boolean) || [];
+      setAllOrgMembers(allMembers);
+      
+      // If editing a task, ensure all current assignees are in the members list
+      if (task && task.task_assignees) {
+        const currentAssignees = task.task_assignees
+          .map((ta: any) => ta.user)
+          .filter(Boolean);
+        
+        // Add any assignees that might not be in the org members list
+        const memberIds = new Set(allMembers.map(m => m.id));
+        currentAssignees.forEach((assignee: any) => {
+          if (!memberIds.has(assignee.id)) {
+            allMembers.push(assignee);
+          }
+        });
+      }
       
       // Get all tasks for this project to find team members
       const { data: tasks } = await supabase
@@ -219,6 +236,15 @@ export function TaskModal({
       
       if (project?.lead && !uniqueMembers.has(project.lead.id)) {
         uniqueMembers.set(project.lead.id, project.lead);
+      }
+      
+      // If editing a task, ensure current assignees are included in team members
+      if (task && task.task_assignees) {
+        task.task_assignees.forEach((ta: any) => {
+          if (ta.user && !uniqueMembers.has(ta.user.id)) {
+            uniqueMembers.set(ta.user.id, ta.user);
+          }
+        });
       }
       
       setTeamMembers(Array.from(uniqueMembers.values()));

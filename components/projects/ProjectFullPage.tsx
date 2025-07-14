@@ -18,7 +18,8 @@ import {
   Circle,
   CheckCircle2,
   Pause,
-  XCircle
+  XCircle,
+  ChevronRight
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -26,9 +27,10 @@ import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { NeonButton } from '@/components/ui/NeonButton';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { TaskKanbanBoard } from './TaskKanbanBoard';
+import { TaskKanbanBoardV2 } from './TaskKanbanBoardV2';
 import { InlineStatusEditor } from './InlineStatusEditor';
 import { InlinePriorityEditor } from './InlinePriorityEditor';
+import { TaskModal } from '@/components/tasks/TaskModal';
 
 interface ProjectFullPageProps {
   orgSlug: string;
@@ -49,6 +51,7 @@ export function ProjectFullPage({ orgSlug, projectId }: ProjectFullPageProps) {
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('tasks');
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -182,9 +185,7 @@ export function ProjectFullPage({ orgSlug, projectId }: ProjectFullPageProps) {
             <div className="flex items-center gap-2">
               <NeonButton
                 icon={<Plus className="w-4 h-4" />}
-                onClick={() => {
-                  // TODO: Open add task modal
-                }}
+                onClick={() => setShowAddTaskModal(true)}
               >
                 Add Task
               </NeonButton>
@@ -327,10 +328,12 @@ export function ProjectFullPage({ orgSlug, projectId }: ProjectFullPageProps) {
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         {activeTab === 'tasks' && (
-          <TaskKanbanBoard 
+          <TaskKanbanBoardV2 
             projectId={projectId}
             tasks={project.contributions || []}
             onUpdate={handleProjectUpdate}
+            organizationId={project.organization?.id}
+            orgSlug={orgSlug}
           />
         )}
 
@@ -374,6 +377,20 @@ export function ProjectFullPage({ orgSlug, projectId }: ProjectFullPageProps) {
           </div>
         )}
       </div>
+      
+      {/* Task Modal */}
+      {showAddTaskModal && project && (
+        <TaskModal
+          open={showAddTaskModal}
+          onClose={() => setShowAddTaskModal(false)}
+          onSuccess={() => {
+            setShowAddTaskModal(false);
+            handleProjectUpdate();
+          }}
+          projectId={projectId}
+          organizationId={project.organization_id}
+        />
+      )}
     </div>
   );
 }

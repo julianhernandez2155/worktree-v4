@@ -26,7 +26,8 @@ import {
   ChevronRight,
   ChevronLeft,
   Minimize2,
-  Plus
+  Plus,
+  Filter
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -36,11 +37,13 @@ import { useKeyboardShortcuts } from '@/lib/hooks/useKeyboardShortcuts';
 import { InlineStatusEditor } from './InlineStatusEditor';
 import { InlinePriorityEditor } from './InlinePriorityEditor';
 import { PriorityIcon } from '@/components/ui/PriorityIcon';
-import { TaskKanbanBoard } from './TaskKanbanBoard';
+import { TaskKanbanBoardV2 } from './TaskKanbanBoardV2';
+import { TaskFilters } from './TaskFilters';
 import { createClient } from '@/lib/supabase/client';
 
 interface ProjectDetailPaneProps {
   project: any;
+  orgSlug: string;
   onClose: () => void;
   onUpdate: () => void;
   isExpanded?: boolean;
@@ -59,6 +62,7 @@ const statusConfig = {
 
 export function ProjectDetailPane({ 
   project, 
+  orgSlug,
   onClose, 
   onUpdate, 
   isExpanded = false,
@@ -66,10 +70,46 @@ export function ProjectDetailPane({
 }: ProjectDetailPaneProps) {
   const [activeTab, setActiveTab] = useState<TabType>(isExpanded ? 'tasks' : 'overview');
   const [showMenu, setShowMenu] = useState(false);
+  const [showMyTasksOnly, setShowMyTasksOnly] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [visibleColumns, setVisibleColumns] = useState(['pending', 'in_progress', 'completed', 'verified']);
+  const [selectedPriority, setSelectedPriority] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [orgMembers, setOrgMembers] = useState<any[]>([]);
   const router = useRouter();
   const { sidebarOpen } = useSidebar();
   const supabase = createClient();
   
+  // Get current user on mount
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+      }
+    };
+    getCurrentUser();
+  }, []);
+
+  // Load organization members
+  useEffect(() => {
+    const loadOrgMembers = async () => {
+      if (!project?.organization_id) return;
+      
+      const { data: members } = await supabase
+        .from('organization_members')
+        .select('user:profiles(id, full_name, avatar_url)')
+        .eq('organization_id', project.organization_id);
+      
+      if (members) {
+        const userProfiles = members.map(m => m.user).filter(Boolean);
+        setOrgMembers(userProfiles);
+      }
+    };
+    
+    loadOrgMembers();
+  }, [project?.organization_id]);
+
   // Change to tasks tab when expanding
   useEffect(() => {
     if (isExpanded) {
@@ -666,12 +706,72 @@ export function ProjectDetailPane({
         )}
 
         {activeTab === 'tasks' && (
-          <TaskKanbanBoard 
-            projectId={project.id}
-            tasks={project.contributions || []}
-            onUpdate={onUpdate}
-            organizationId={project.organization_id}
-          />
+          <div className="h-full flex flex-col">
+            {/* Task Controls */}
+            <div className="px-6 py-3 border-b border-dark-border flex items-center gap-4">
+              {/* My Tasks Toggle */}
+              <button
+                onClick={() => {
+                  setShowMyTasksOnly(!showMyTasksOnly);
+                  // Reset member filter when toggling My Tasks
+                  if (!showMyTasksOnly) {
+                    setSelectedMemberId(currentUserId);
+                  } else {
+                    setSelectedMemberId(null);
+                  }
+                }}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-lg transition-all",
+                  showMyTasksOnly 
+                    ? "bg-neon-green/20 text-neon-green border border-neon-green/30" 
+                    : "bg-dark-card text-gray-400 border border-dark-border hover:text-white hover:border-gray-600"
+                )}
+              >
+                <Filter className="w-4 h-4" />
+                <span className="font-medium">My Tasks</span>
+                {showMyTasksOnly && currentUserId && (
+                  <span className="ml-1 px-2 py-0.5 bg-neon-green/20 rounded-full text-xs">
+                    {project.contributions?.filter((task: any) => 
+                      task.task_assignees?.some((assignee: any) => 
+                        assignee.user?.id === currentUserId
+                      )
+                    ).length || 0}
+                  </span>
+                )}
+              </button>
+              
+              {/* Task Filters */}
+              <TaskFilters
+                members={orgMembers}
+                selectedMemberId={selectedMemberId}
+                onMemberChange={(memberId) => {
+                  setSelectedMemberId(memberId);
+                  // Turn off My Tasks toggle if selecting a different member
+                  if (memberId && memberId !== currentUserId) {
+                    setShowMyTasksOnly(false);
+                  }
+                }}
+                visibleColumns={visibleColumns}
+                onVisibleColumnsChange={setVisibleColumns}
+                selectedPriority={selectedPriority}
+                onPriorityChange={setSelectedPriority}
+              />
+            </div>
+            
+            {/* Task Kanban Board */}
+            <div className="flex-1 overflow-hidden">
+              <TaskKanbanBoardV2 
+                projectId={project.id}
+                tasks={project.contributions || []}
+                onUpdate={onUpdate}
+                organizationId={project.organization_id}
+                orgSlug={orgSlug}
+                selectedMemberId={selectedMemberId}
+                visibleColumns={visibleColumns}
+                selectedPriority={selectedPriority}
+              />
+            </div>
+          </div>
         )}
 
         {activeTab === 'team' && (
